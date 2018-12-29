@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <windows.h> //only for system("pause")
 #include <chrono>
 #include "../solver/solver.h"
 extern "C" {
@@ -67,7 +66,7 @@ int main()
 		 checkErrors(r);
 		 fclose(fp);
 		 free(a); free(b);
-		 system("pause");
+		 getchar();
 		 return -1;
 	 }
 
@@ -90,7 +89,7 @@ int main()
 
  fclose(fp);
  free(a); free(b);
- system("pause");
+ getchar();
  return 0;
 }
 
