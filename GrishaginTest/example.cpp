@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <chrono>
+#include <iostream>
 #include "../solver/solver.h"
 extern "C" {
 #include "vagris.h"
@@ -20,6 +21,7 @@ int main()
  char filename[12];
  FILE *fp;
  sprintf_s(filename, 12, "results.txt");
+
 
  if ((fopen_s(&fp, filename, "wt")) != 0) {
 	 printf("Problem with file...\n");
@@ -89,7 +91,7 @@ int main()
 
  fclose(fp);
  free(a); free(b);
- getchar();
+ std::cin.get();
  return 0;
 }
 

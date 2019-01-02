@@ -12,20 +12,97 @@ double(*compute)(double x1, double x2) = nullptr; //pointer to function that com
 //double(*compute)(double *x) = nullptr; 
 
 struct part {
-	double *a;
-	double *b;
+	int size;
+	double *a = nullptr;
+	double *b = nullptr;
 	double LocUP, LocLO, deltaL;
-	part(const double* toa, const double* tob, int ldim) {
-		a = (double*)malloc(ldim * sizeof(double));
-		b = (double*)malloc(ldim * sizeof(double));
-		for (int i = 0; i < ldim; i++) {
-			a[i] = toa[i];
-			b[i] = tob[i];
+};
+
+
+struct Partitions {
+	int size;
+	int cur_alloc;
+	struct part* base;
+	Partitions() {
+		size = 0;
+		cur_alloc = 0;
+		base = nullptr;
+	}
+	~Partitions() {
+		for (int i = 0; i < size; i++) {
+			free(base[i].a);
+			free(base[i].b);
 		}
+		size = 0;
+		if (cur_alloc != 0)
+			free(base);
+		cur_alloc = 0;;
+	}
+	void erase() {
+		for (int i = 0; i < size; i++) {
+			free(base[i].a);
+			free(base[i].b);
+		}
+		size = 0;
+		if (cur_alloc != 0)
+			free(base);
+		cur_alloc = 0;
+	}
+	void add(double* toa, double *tob, int dim) {
+		if (cur_alloc == 0) {
+			base = (struct part*)malloc(16 * sizeof(struct part));
+			if (base) {
+				cur_alloc = 16;
+			}
+			else {
+				fprintf(stderr,"Error alloc\n");
+				erase();
+				return;
+			}
+		}
+		if (size == cur_alloc) {
+			base = (struct part*)realloc(base,(cur_alloc + 16) * sizeof(struct part));
+			if (base) {
+				cur_alloc += 16;
+			}
+			else {
+				fprintf(stderr, "Error alloc\n");
+				erase();
+				return;
+			}
+		}
+		base[size].size = dim;
+		base[size].a = (double*)malloc(dim * sizeof(double));
+		base[size].b = (double*)malloc(dim * sizeof(double));
+		if ((!base[size].a)||(!base[size].b)) {
+			fprintf(stderr, "Error alloc\n");
+			erase();
+			return;
+		}
+		for (int i = 0; i < dim; i++) {
+			base[size].a[i] = toa[i];
+			base[size].b[i] = tob[i];
+		}
+		size++;
+	}
+	part & operator[](int n) {
+		if (n > size - 1) {
+			fprintf(stderr, "Out of size\n");
+			n = 0;
+		}
+		return base[n];
+	}
+	Partitions & operator=(Partitions& P) {
+		erase();
+		for (int i = 0; i < P.size; i++) {
+			add(P[i].a, P[i].b, P[i].size);
+		}
+		return (*this);
 	}
 };
 
-std::vector<part> Partitions;
+
+Partitions P, P1;
 
 double getR(double delta) {
 	return exp(delta);
@@ -125,7 +202,7 @@ int do_test(double *a, double* b) {
 		return -2;
 	}
 
-	Partitions.emplace_back(a, b, dim);
+	P.add(a, b, dim);
 
 	double *a1, *b1;
 
@@ -136,52 +213,45 @@ int do_test(double *a, double* b) {
 		return -3;
 	}
 
-	while (Partitions.size() != 0) {
-		unsigned int parts = Partitions.size();
+	while (P.size != 0) {
+		unsigned int parts = P.size;
 
 		for (int i = 0; i < static_cast<int>(parts); i++) {
 			double lUPB, lLOB, ldeltaL;
-			GridEvaluator(Partitions[i].a, Partitions[i].b, &lUPB, &lLOB, &ldeltaL);
-			Partitions[i].LocLO = lLOB;
-			Partitions[i].LocUP = lUPB;
-			Partitions[i].deltaL = ldeltaL;
+			GridEvaluator(P[i].a, P[i].b, &lUPB, &lLOB, &ldeltaL);
+			P[i].LocLO = lLOB;
+			P[i].LocUP = lUPB;
+			P[i].deltaL = ldeltaL;
 		}
 
 		for (unsigned int i = 0; i < parts; i++) {
-			UpdateRecords(Partitions[i].LocUP, Partitions[i].LocLO);
+			UpdateRecords(P[i].LocUP, P[i].LocLO);
 		}
 
 		for (unsigned int i = 0; i < parts; i++) {
-			if ((Partitions[i].LocLO < (UPB - eps)) || (Partitions[i].deltaL > eps)) {
-				int choosen = ChooseDim(Partitions[i].a, Partitions[i].b);
+			if ((P[i].LocLO < (UPB - eps)) || (P[i].deltaL > eps)) {
+				int choosen = ChooseDim(P[i].a, P[i].b);
 
 				for (int j = 0; j < dim; j++) { //make new edges for 2 new hyperintervals:
 					if (j != choosen) {						//[a .. b1] [a1 .. b]
-						a1[j] = Partitions[i].a[j];			//where a1 = [a[1], a[2], .. ,a[choosen] + b[choosen]/2, .. , a[dim] ]
-						b1[j] = Partitions[i].b[j];			//and b1 = [b[1], b[2], .. ,a[choosen] + b[choosen]/2, .. , b[dim] ]
+						a1[j] = P[i].a[j];			//where a1 = [a[1], a[2], .. ,a[choosen] + b[choosen]/2, .. , a[dim] ]
+						b1[j] = P[i].b[j];			//and b1 = [b[1], b[2], .. ,a[choosen] + b[choosen]/2, .. , b[dim] ]
 					}
 					else {
-						a1[j] = Partitions[i].a[j] + fabs(Partitions[i].b[j] - Partitions[i].a[j]) / 2.0;
+						a1[j] = P[i].a[j] + fabs(P[i].b[j] - P[i].a[j]) / 2.0;
 						b1[j] = a1[j];
 					}
 				}
-				try {
-					Partitions.emplace_back(Partitions[i].a, b1, dim);
-					Partitions.emplace_back(a1, Partitions[i].b, dim);
-				}
-				catch (std::bad_alloc e) {
-					free(a1); free(b1);
-					return -3;
-				}
+					P1.add(P[i].a, b1, dim);
+					P1.add(a1, P[i].b, dim);
 			}
 		}
 
-		for (unsigned int i = 0; i < parts; i++)
-			Partitions.erase(Partitions.begin());
-		Partitions.shrink_to_fit(); //to economy memory
+		P = P1;
+		P1.erase();
 	}
 	free(a1); free(b1);
-	Partitions.clear();
+	P.erase();
 	return 0;
 }
 
