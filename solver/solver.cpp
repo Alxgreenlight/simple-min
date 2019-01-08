@@ -3,15 +3,16 @@
 #include <vector>
 #include <cstdio>
 
-double eps = 100; //accuracy
-double UPB, LOB, deltaL, glob = DBL_MAX; //obtained upped bound, lower bound, mean of delta*L, and real global minimizer
+double eps = 100; //accuracy (100 is default value)
+double UPB, LOB, deltaL, glob = DBL_MAX; //obtained upped bound, lower bound, value of delta*L, and real global minimizer
 
 int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
 
 double(*compute)(double x1, double x2) = nullptr; //pointer to function that computes y at x[]
-//double(*compute)(double *x) = nullptr; 
+//double(*compute)(double *x) = nullptr; // this pointer should be uncommented and previous commented in case of function for evaluation
+//takes an array x in parameter
 
-struct part {
+struct part {	//description of hyperinterval
 	int size;
 	double *a = nullptr;
 	double *b = nullptr;
@@ -19,9 +20,9 @@ struct part {
 };
 
 
-struct Partitions {
-	int size;
-	int cur_alloc;
+struct Partitions {		//all hyperintervals obtained on current step of algorithm
+	int size;									//like std::vector, but in C language with only needed methods
+	int cur_alloc; //memory already allocated for array of struct part
 	struct part* base;
 	Partitions() {
 		size = 0;
@@ -48,7 +49,7 @@ struct Partitions {
 			free(base);
 		cur_alloc = 0;
 	}
-	void add(double* toa, double *tob, int dim) {
+	int add(double* toa, double *tob, int dim) {
 		if (cur_alloc == 0) {
 			base = (struct part*)malloc(16 * sizeof(struct part));
 			if (base) {
@@ -57,7 +58,7 @@ struct Partitions {
 			else {
 				fprintf(stderr,"Error alloc\n");
 				erase();
-				return;
+				return -1;
 			}
 		}
 		if (size == cur_alloc) {
@@ -68,7 +69,7 @@ struct Partitions {
 			else {
 				fprintf(stderr, "Error alloc\n");
 				erase();
-				return;
+				return -1;
 			}
 		}
 		base[size].size = dim;
@@ -77,18 +78,18 @@ struct Partitions {
 		if ((!base[size].a)||(!base[size].b)) {
 			fprintf(stderr, "Error alloc\n");
 			erase();
-			return;
+			return -1;
 		}
 		for (int i = 0; i < dim; i++) {
 			base[size].a[i] = toa[i];
 			base[size].b[i] = tob[i];
 		}
 		size++;
+		return 0;
 	}
 	part & operator[](int n) {
 		if (n > size - 1) {
 			fprintf(stderr, "Out of size\n");
-			n = 0;
 		}
 		return base[n];
 	}
@@ -102,20 +103,20 @@ struct Partitions {
 };
 
 
-Partitions P, P1;
+Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
-double getR(double delta) {
+double getR(double delta) { //r value for formula for etimating Lipschitz constant
 	return exp(delta);
 }
 
-void UpdateRecords(double LU, double LL) {
+void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
 	if (LU < UPB) {
 		UPB = LU;
 		LOB = LL;
 	}
 }
 
-int ChooseDim(double *a, double *b) { //выбор координаты для деления гиперинтервала
+int ChooseDim(double *a, double *b) { //selection of coordinate for hyperinterval division
 	double max = DBL_MIN, cr;
 	int maxI = 0;
 	for (int i = 0; i < dim; i++) {
@@ -132,26 +133,25 @@ void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 	double Fr = DBL_MAX, L = DBL_MIN, R, Fx, Fx1, LB;
 	double curR, curdelta;
 	int edge, change, flag;
-	//code here
 	double *step, *x, *x1;
-	step = (double*)malloc(dim * sizeof(double));
-	x = (double*)malloc(dim * sizeof(double));
+	step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
+	x = (double*)malloc(dim * sizeof(double)); //algorithm now needs to evaluate function in two adjacent point at the same time
 	x1 = (double*)malloc(dim * sizeof(double));
 	for (int i = 0; i < dim; i++) {
 		step[i] = fabs(b[i] - a[i]) / (nodes - 1);
 	}
-	curR = getR(step[0]);
-	curdelta = step[0];
+	curR = getR(step[0]);	//value of r for this dimension
+	curdelta = step[0];		//delta value (step of grid) for this dimension
 	for (int i = 0; i < dim; i++) { //i - размерность, по которой считаем соседние точки
 		for (int k = 0; k < dim; k++) {
 			x[k] = a[k];
 			x1[k] = a[k];
 		}
 		R = getR(step[i]);
-		edge = i == 0 ? 1 : 0;
-		change = i == (dim - 1) ? (dim - 2) : (dim - 1);
+		edge = i == 0 ? 1 : 0;		//[0..n], there may be [i(fixed),1,..,n] or [0,..,n-1,i(fixed)]
+		change = i == (dim - 1) ? (dim - 2) : (dim - 1);	//so we need edge and change values(change is lower digit for iterating over points)
 		int prechange = change; double loc;
-		while (!(x[edge] > b[edge])) { //проход по всем точкам
+		while (!(x[edge] > b[edge])) { //all pount pass
 			change = prechange;
 			flag = 0;
 			for (int j = 1; j < nodes; j++) {// from here
@@ -166,9 +166,8 @@ void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 					curdelta = step[i];
 				}
 				x[i] += step[i];
-			}//to here вычисления функции
-			Fr = Fx1 < Fr ? Fx1 : Fr;//учитываем последнее вычисление
-									 //from here
+			}//to here function evaluation
+			//from here
 			while (!flag) {
 				x[change] += step[change];
 				if (change == edge) {
@@ -181,11 +180,11 @@ void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 					continue;
 				}
 				flag = 1;
-			}//to here генерация новой точки
+			}//to here new point generation
 		}
 	}
+	//final calculation
 	LB = curR * L * curdelta;
-	//code here
 	*dL = LB;
 	LB = Fr - LB;
 	free(step); free(x); free(x1);
@@ -193,19 +192,19 @@ void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 	*LBp = LB;
 }
 
-int do_test(double *a, double* b) {
-	UPB = DBL_MAX;
-	if (glob == DBL_MAX) {
+int min_search(double *a, double* b) {
+	UPB = DBL_MAX;	//upper bound
+	if (glob == DBL_MAX) {	//check if uninitialized values
 		return -1;
 	}
 	if (compute == nullptr) {
 		return -2;
 	}
 
-	P.add(a, b, dim);
+	P.add(a, b, dim);	//add first hyperinterval
 
 	double *a1, *b1;
-
+	//if hyperinterval divides, 2 new hyperintervals with bounds [a..b1] [a1..b] creates
 	a1 = (double*)malloc(dim * sizeof(double));
 	b1 = (double*)malloc(dim * sizeof(double));
 
@@ -213,7 +212,7 @@ int do_test(double *a, double* b) {
 		return -3;
 	}
 
-	while (P.size != 0) {
+	while (P.size != 0) {	//each hyperinterval can be subdivided or pruned (if non-promisiable or fits accuracy)
 		unsigned int parts = P.size;
 
 		for (int i = 0; i < static_cast<int>(parts); i++) {
