@@ -3,14 +3,17 @@
 #include <vector>
 #include <cstdio>
 
+
 double eps = 100; //accuracy (100 is default value)
 double UPB, LOB, deltaL, glob = DBL_MAX; //obtained upped bound, lower bound, value of delta*L, and real global minimizer
+double sqrt2 = sqrt(2.0);
 
 int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
 
 double(*compute)(double x1, double x2) = nullptr; //pointer to function that computes y at x[]
 //double(*compute)(double *x) = nullptr; // this pointer should be uncommented and previous commented in case of function for evaluation
 //takes an array x in parameter
+//ALSO LOOK AT LINES 163 AND 165!!!
 
 struct part {	//description of hyperinterval
 	int size;
@@ -106,7 +109,7 @@ struct Partitions {		//all hyperintervals obtained on current step of algorithm
 Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
 double getR(double delta) { //r value for formula for etimating Lipschitz constant
-	return exp(delta);
+	return 2.0*exp(delta);
 }
 
 void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
@@ -154,10 +157,14 @@ void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 		while (!(x[edge] > b[edge])) { //all pount pass
 			change = prechange;
 			flag = 0;
+			x[i] = a[i];
+			x1[i] = a[i];
 			for (int j = 1; j < nodes; j++) {// from here
 				x1[i] += step[i];
-				Fx = compute(x[0], x[1]);
-				Fx1 = compute(x1[0], x1[1]);
+				Fx = compute(x[0],x[1]);
+				//Fx = compute(x);
+				Fx1 = compute(x1[0],x1[1]);
+				//Fx1 = compute(x1);
 				Fr = Fx < Fr ? Fx : Fr;
 				loc = fabs(Fx - Fx1) / step[i];
 				if (loc > L) {
@@ -169,6 +176,10 @@ void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 			}//to here function evaluation
 			//from here
 			while (!flag) {
+				if (change == i) {
+					change--;
+					continue;
+				}
 				x[change] += step[change];
 				if (change == edge) {
 					flag = 1;
@@ -215,7 +226,7 @@ int min_search(double *a, double* b) {
 	while (P.size != 0) {	//each hyperinterval can be subdivided or pruned (if non-promisiable or fits accuracy)
 		unsigned int parts = P.size;
 
-		for (int i = 0; i < static_cast<int>(parts); i++) {
+		for (unsigned int i = 0; i < parts; i++) {
 			double lUPB, lLOB, ldeltaL;
 			GridEvaluator(P[i].a, P[i].b, &lUPB, &lLOB, &ldeltaL);
 			P[i].LocLO = lLOB;
@@ -228,7 +239,7 @@ int min_search(double *a, double* b) {
 		}
 
 		for (unsigned int i = 0; i < parts; i++) {
-			if ((P[i].LocLO < (UPB - eps)) || (P[i].deltaL > eps)) {
+			if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
 				int choosen = ChooseDim(P[i].a, P[i].b);
 
 				for (int j = 0; j < dim; j++) { //make new edges for 2 new hyperintervals:
