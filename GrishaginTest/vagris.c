@@ -14,6 +14,7 @@
 
 
 #include <math.h>
+#include <stdlib.h>
 #include "vagris.h"
 
 double rand_minimums[]={
