@@ -5,7 +5,7 @@ namespace solver {
 	extern int nodes, dim;
 	extern double eps;
 	extern double UPB, LOB, deltaL, glob;
-	extern double(*compute)(double x1, double x2);
+	extern double(*compute)(double *x);
 	void checkErrors(int code); //check errors after call min_search and print error info
 	int min_search(double*a, double *b);
 }

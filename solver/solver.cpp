@@ -10,10 +10,7 @@ namespace solver {
 
 	int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
 
-	double(*compute)(double x1, double x2) = nullptr; //pointer to function that computes y at x[]
-	//double(*compute)(double *x) = nullptr; // this pointer should be uncommented and previous commented in case of function for evaluation
-	//takes an array x in parameter
-	//ALSO LOOK AT LINES 164 AND 166!!!
+	double(*compute)(double *x) = nullptr;
 
 	struct part {	//description of hyperinterval
 		int size;
@@ -163,10 +160,8 @@ namespace solver {
 				x1[i] = a[i];
 				for (int j = 1; j < nodes; j++) {// from here
 					x1[i] += step[i];
-					Fx = compute(x[0], x[1]);
-					//Fx = compute(x);
-					Fx1 = compute(x1[0], x1[1]);
-					//Fx1 = compute(x1);
+					Fx = compute(x);
+					Fx1 = compute(x1);
 					Fr = Fx < Fr ? Fx : Fr;
 					loc = fabs(Fx - Fx1) / step[i];
 					if (loc > L) {

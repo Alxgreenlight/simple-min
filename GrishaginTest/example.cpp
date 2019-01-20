@@ -11,6 +11,10 @@ double *a, *b; //sets the search area for task
 
 std::chrono::steady_clock sc; //for runtime measurement
 
+double func(double *xx) {
+	return random_func(xx[0], xx[1]);	//random_func returns value of function in x1,x2 (from vagris.h)
+}
+
 int main()
 {
 	
@@ -47,7 +51,7 @@ int main()
 		b[i] = 1.0;
 	} //set search area for all tests to [0..1] [0..1] (like in tutorial for this tests)
 
-	solver::compute = random_func; //random_func returns value of function in x1,x2 (from vagris.h)
+	solver::compute = func; 
 
 	auto astart = sc.now(); //start time for full set of tests
 	for (nf = 1; nf <= 100; nf++)
