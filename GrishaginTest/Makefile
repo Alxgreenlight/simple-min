@@ -1,14 +1,19 @@
+CXX=g++
+CXXFLAGS=-c -std=c++11 -Wall
+CC=gcc
+CCFLAGS=-c
+
 GrishaginTest: example.o ../solver/solver.o vagris.o
-	g++ example.o ../solver/solver.o vagris.o -o Grishagintest
+	$(CXX) -o GrTest example.o ../solver/solver.o vagris.o
 
 example.o: example.cpp
-	g++ -c example.cpp -std=c++11
+	$(CXX) $(CXXFLAGS) example.cpp
 
 ../solver/solver.o: ../solver/solver.cpp
-	g++ -c ../solver/solver.cpp -std=c++11 -o ../solver/solver.o
+	$(CXX) $(CXXFLAGS) ../solver/solver.cpp -o ../solver/solver.o
 
 vagris.o: vagris.c
-	g++ -c vagris.c
+	$(CC) $(CCFLAGS) vagris.c
 
 clean:
-	rm -rf *.o ../solver/*.o GrishaginTesttest
+rm -rf *.o ../solver/*.o GrTest
