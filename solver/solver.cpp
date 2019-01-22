@@ -106,7 +106,7 @@ namespace solver {
 	Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
 	double getR(double delta) { //r value for formula for estimating Lipschitz constant
-		return sqrt2 * exp(delta);
+		return 2.0 * exp(delta);
 	}
 
 	void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
@@ -131,16 +131,17 @@ namespace solver {
 
 	void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 		double Fr = DBL_MAX, L = DBL_MIN, R, Fx, Fx1, LB;
-		double curR, curdelta;
+		double curR, curdelta = DBL_MIN;
 		double *step, *x, *x1;
 		step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
 		x = (double*)malloc(dim * sizeof(double)); //algorithm now needs to evaluate function in two adjacent point at the same time
 		x1 = (double*)malloc(dim * sizeof(double));
 		for (int i = 0; i < dim; i++) {
 			step[i] = fabs(b[i] - a[i]) / (nodes - 1);
+			curdelta = step[i] > curdelta ? step[i] : curdelta;
 		}
-		curR = getR(step[0]);	//value of r for this dimension
-		curdelta = step[0];		//delta value (step of grid) for this dimension
+		curdelta = curdelta * 0.5 * dim;
+		curR = getR(curdelta);	//value of r for this dimension
 		for (int i = 0; i < dim; i++) { //i - размерность, по которой считаем соседние точки
 			R = getR(step[i]);
 			double loc;
@@ -164,11 +165,7 @@ namespace solver {
 					Fx1 = compute(x1);
 					Fr = Fx < Fr ? Fx : Fr;
 					loc = fabs(Fx - Fx1) / step[i];
-					if (loc > L) {
-						L = loc;
-						curR = R;
-						curdelta = step[i];
-					}
+					L = loc > L ? loc : L;
 					x[i] += step[i];
 				}//to here function evaluation
 			}
