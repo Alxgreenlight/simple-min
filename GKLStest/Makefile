@@ -19,4 +19,4 @@ rnd_gen.o: rnd_gen.c
 	$(CC) $(CCFLAGS) rnd_gen.c
 
 clean:
-rm -rf *.o ../solver/*.o GKLStest
+	rm -rf *.o ../solver/*.o GKLStest

@@ -16,4 +16,4 @@ vagris.o: vagris.c
 	$(CC) $(CCFLAGS) vagris.c
 
 clean:
-rm -rf *.o ../solver/*.o GrTest
+	rm -rf *.o ../solver/*.o GrTest
