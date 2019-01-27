@@ -9,6 +9,7 @@ namespace solver {
 	double sqrt2 = sqrt(2.0);
 
 	int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
+	int fevals = 0;
 
 	double(*compute)(double *x) = nullptr;
 
@@ -106,7 +107,7 @@ namespace solver {
 	Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
 	double getR(double delta) { //r value for formula for estimating Lipschitz constant
-		return 2.0 * exp(delta);
+		return sqrt(2) * exp(delta);
 	}
 
 	void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
@@ -130,56 +131,93 @@ namespace solver {
 	}
 
 	void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
-		double Fr = DBL_MAX, L = DBL_MIN, R, Fx, Fx1, LB;
-		double curR, curdelta = DBL_MIN;
-		double *step, *x, *x1;
+		double Fr = DBL_MAX, L = DBL_MIN, R, LB, delta = DBL_MIN, loc, rs;
+		double *step, *x, *x1, *Fx, *Fx1;
+		double *temp;
 		step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
 		x = (double*)malloc(dim * sizeof(double)); //algorithm now needs to evaluate function in two adjacent point at the same time
 		x1 = (double*)malloc(dim * sizeof(double));
+		if ((step == nullptr) || (x == nullptr) || (x1 == nullptr)) {
+			*dL = -100;
+			return;
+		}
 		for (int i = 0; i < dim; i++) {
 			step[i] = fabs(b[i] - a[i]) / (nodes - 1);
-			curdelta = step[i] > curdelta ? step[i] : curdelta;
+			delta = step[i] > delta ? step[i] : delta;
 		}
-		curdelta = curdelta * 0.5 * dim;
-		curR = getR(curdelta);	//value of r for this dimension
-		for (int i = 0; i < dim; i++) { //i - размерность, по которой считаем соседние точки
-			R = getR(step[i]);
-			double loc;
-			int allpoints = static_cast<int>(pow(nodes, dim - 1));
-			for (int ind = 0; ind < allpoints; ind++) {
-				for (int k = 0; k < dim; k++) {
-					if (k != i) {
-						int t = ind % nodes;
-						x[k] = a[k] + t * step[k];
-						x1[k] = x[k];
-					}
-					else {
-						continue;
+		delta = delta * 0.5 * dim;
+		R = getR(delta);	//value of r for this dimension
+		int allnodes = (int)(pow(nodes, dim - 1));
+		int neighbour, tk;
+		Fx = (double*)malloc(allnodes * sizeof(double));
+		Fx1 = (double*)malloc(allnodes * sizeof(double));
+		if ((Fx == nullptr) || (Fx1 == nullptr)) {
+			*dL = -100;
+			return;
+		}
+		x[0] = a[0];
+		for (int point = 0; point < allnodes; point++) {
+			tk = point;
+			for (int k = dim - 1; k > 0; k--) {
+				int t = tk % nodes;
+				tk = (int)(tk / nodes);
+				x[k] = a[k] + t * step[k];
+			}
+			rs = compute(x);
+			fevals++;
+			Fx[point] = rs;
+			Fr = rs < Fr ? rs : Fr;
+		}
+		for (int it = 1; it < nodes; it++) {
+			x[0] += step[0];
+			for (int point = 0; point < allnodes; point++) {
+				tk = point;
+				for (int k = dim - 1; k > 0; k--) {
+					int t = tk % nodes;
+					tk = (int)(tk / nodes);
+					x[k] = a[k] + t * step[k];
+				}
+				rs = compute(x);
+				fevals++;
+				Fx1[point] = rs;
+				Fr = rs < Fr ? rs : Fr;
+			}
+			for (int point = 0; point < allnodes; point++) {
+				loc = fabs(Fx[point] - Fx1[point]) / step[0];
+				L = loc > L ? loc : L;
+				for (int n = 0; n < dim - 1; n++) {
+					neighbour = point + (int)pow(nodes,n);
+					if (neighbour < allnodes) {
+						loc = fabs(Fx[point] - Fx[neighbour]) / step[dim - 1 - n];
+						L = loc > L ? loc : L;
 					}
 				}
-				x[i] = a[i];
-				x1[i] = a[i];
-				for (int j = 1; j < nodes; j++) {// from here
-					x1[i] += step[i];
-					Fx = compute(x);
-					Fx1 = compute(x1);
-					Fr = Fx < Fr ? Fx : Fr;
-					loc = fabs(Fx - Fx1) / step[i];
+			}
+			temp = Fx;
+			Fx = Fx1;
+			Fx1 = temp;
+		}
+		for (int point = 0; point < allnodes; point++) {
+			for (int n = 0; n < dim - 1; n++) {
+				neighbour = point + (int)(pow(nodes, n));
+				if (neighbour < allnodes) {
+					loc = fabs(Fx[point] - Fx[neighbour]) / step[dim - 1 - n];
 					L = loc > L ? loc : L;
-					x[i] += step[i];
-				}//to here function evaluation
+				}
 			}
 		}
 		//final calculation
-		LB = curR * L * curdelta;
+		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;
 		free(step); free(x); free(x1);
+		free(Fx); free(Fx1);
 		*Frp = Fr;
 		*LBp = LB;
 	}
 
 	int min_search(double *a, double* b) {
+		fevals = 0;
 		UPB = DBL_MAX;	//upper bound
 		if (glob == DBL_MAX) {	//check if uninitialized values
 			return -1;
@@ -205,9 +243,14 @@ namespace solver {
 			for (unsigned int i = 0; i < parts; i++) {
 				double lUPB, lLOB, ldeltaL;
 				GridEvaluator(P[i].a, P[i].b, &lUPB, &lLOB, &ldeltaL);
-				P[i].LocLO = lLOB;
-				P[i].LocUP = lUPB;
-				P[i].deltaL = ldeltaL;
+				if (ldeltaL > 0) {
+					P[i].LocLO = lLOB;
+					P[i].LocUP = lUPB;
+					P[i].deltaL = ldeltaL;
+				}
+				else {
+					return -3;
+				}
 			}
 
 			for (unsigned int i = 0; i < parts; i++) {

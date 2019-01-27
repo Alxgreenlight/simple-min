@@ -1,22 +1,31 @@
-#include <cmath>
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
-#include "../solver/solver.h"
-
 extern "C" {
-#include "gkls.h"
-#include "rnd_gen.h"
+#include "direct.h"
+#include "../directtest/gkls.h"
+#include "../directtest/rnd_gen.h"
 }
 
+double tst_obj(int n, const double *xy, int *undefined_flag, void *unused)
+{
+	double f, *x;
+	x = (double*)malloc(n * sizeof(double));
+	for (int i = 0; i < n; i++) {
+		x[i] = xy[i];
+	}
+	f = GKLS_D_func(x);
+	// f = GKLS_ND_func(x); // -- for ND-type test function 
+	// f = GKLS_D2_func(x); // -- for D2-type test function 
+	free(x);
+	return f;
+}
 
-double *a, *b; //sets the search area for task
-
-void print_error_msg(int);
-
+double *a, *b, *x; //sets the search area for task
 std::chrono::steady_clock sc; //for runtime measurement
 
+void print_error_msg(int);
 
 int main()
 {
@@ -28,12 +37,6 @@ int main()
 	std::cout << std::endl << "for Global Optimization,";
 	std::cout << std::endl << "(C) 2002-2003, M.Gaviano, D.E.Kvasov, D.Lera, and Ya.D.Sergeyev" << std::endl << std::endl;
 
-
-	/* Set the input parameters */
-	/*if ((error_code=GKLS_set_default()) != GKLS_OK) {
-		print_error_msg(error_code);
-		return error_code;
-	}*/
 	GKLS_dim = 2;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
@@ -44,7 +47,7 @@ int main()
 	if ((error_code = GKLS_parameters_check()) != GKLS_OK)
 		return error_code;
 
-	solver::dim = GKLS_dim;
+	int n = GKLS_dim;
 
 	fp.open("results.txt", std::ios::out);
 	if (!fp.is_open()) {
@@ -54,24 +57,20 @@ int main()
 		return -1;
 	}
 
-	std::cout << "Set number of nodes per dimension" << std::endl << \
-		"It can significantly affect on performance!" << std::endl;
-	std::cin >> solver::nodes;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> solver::nodes;
-	}
+	double eps;
 
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> solver::eps;
+	std::cin >> eps;
 	while (std::cin.fail()) {
 		std::cerr << "Please, repeat input" << std::endl;
 	}
 
-	a = new double[solver::dim];
-	b = new double[solver::dim];
+	a = new double[n];
+	b = new double[n];
+	x = new double[n];
 
-	/* Generate the class of 100 D-type functions */
+	double minf; //result of direct method
+				 /* Generate the class of 100 D-type functions */
 	auto astart = sc.now(); //start time for full set of tests
 
 	for (func_num = 1; func_num <= 100; func_num++)
@@ -81,23 +80,25 @@ int main()
 			return error_code;
 		}
 
-		for (int i = 0; i < solver::dim; i++) {
+		for (int i = 0; i < n; i++) {
 			a[i] = GKLS_domain_left[i];
 			b[i] = GKLS_domain_right[i];
 		} //set search area for test
 
-		solver::compute = GKLS_D_func;
-		// solver::compute = GKLS_ND_func; // -- for ND-type test function 
-		// solver::compute = GKLS_D2_func; // -- for D2-type test function 
-
 		std::cout << std::endl << "Generating the function number " << func_num << std::endl;
-
 		fp << "D-type function number " << func_num;
 		fp << std::endl << "of the class with the following parameters:";
 		fp << std::endl << "    global minimum value   = " << GKLS_global_value << ';';
 
-		solver::glob = GKLS_global_value;
 
+
+		int maxfeval, maxits;
+		int info;
+
+		int force_stop = 0;
+
+		maxfeval = 50000;
+		maxits = 500;
 
 		/* Information about global minimizers */
 		if (GKLS_glob.gm_index == 0)
@@ -115,8 +116,8 @@ int main()
 				fp << i + 1 << ":	";
 				double *x = GKLS_minima.local_min[GKLS_glob.gm_index[i]];
 				fp << '[';
-				for (int k = 0; k < solver::dim; k++) {
-					if (k != solver::dim - 1)
+				for (int k = 0; k < n; k++) {
+					if (k != n - 1)
 						fp << std::setprecision(3) << x[k] << ' ';
 					else
 						fp << std::setprecision(3) << x[k] << ']' << std::endl;
@@ -124,35 +125,36 @@ int main()
 			}
 		}
 
+		double glob = DIRECT_UNKNOWN_FGLOBAL;
+		glob = GKLS_global_value;
+
 		/* Function evaluating */
 		auto start = sc.now(); //start time for one function evaluating
 
-		int r = solver::min_search(a, b);
-
-		if (r) {
-			solver::checkErrors(r);
-			fp.close();
-			delete[]a; delete[]b;
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			std::cin.get();
-			GKLS_free();
-			GKLS_domain_free();
-			return -2;
-		}
+		info = direct_optimize(tst_obj, NULL, n, a, b, x, &minf,
+			&maxfeval, maxits,
+			0, 0,
+			10e-4, 10e-4,
+			0, -1.0,
+			&force_stop,
+			glob, eps,
+			stdout, DIRECT_ORIGINAL);
 
 		auto end = sc.now();
 		auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		fp << "Search complete:" << std::endl << "Upper bound: " << std::setprecision(4) << solver::UPB << std::endl << \
-			"Real global minimum: " << std::setprecision(4) << solver::glob << std::endl << "Lower bound: " << std::setprecision(4) << \
-			solver::LOB << std::endl << "Diff: " << std::setprecision(4) << 1.0*fabs(solver::glob - solver::UPB) << std::endl;
-		fp << "Function evaluations: " << solver::fevals << std::endl;
+
+		fp << "Search complete:" << std::endl << "Obtained min: " << std::setprecision(4) << minf << std::endl << \
+			"Real global minimum: " << std::setprecision(4) << glob << std::endl << \
+			"Diff: " << std::setprecision(4) << 1.0*fabs(glob - minf) << std::endl;
+		fp << "Function evalautions: " << maxfeval << std::endl;
 		fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
 		fp << std::endl << std::endl;
 
 
 		/* Deallocate memory */
 		GKLS_free();
-	} /* for func_num*/
+
+	}
 
 	std::cout << std::endl;
 
@@ -167,14 +169,12 @@ int main()
 
 
 	/* Deallocate the boundary vectors */
-	delete[]a; delete[]b;
+	delete[]a; delete[]b; delete[]x;
 	GKLS_domain_free();
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cin.get();
 	return 0;
-
 }
-
 
 /* Print an error message */
 void print_error_msg(int error_code)
