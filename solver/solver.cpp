@@ -107,7 +107,7 @@ namespace solver {
 	Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
 	double getR(double delta) { //r value for formula for estimating Lipschitz constant
-		return sqrt(2) * exp(delta);
+		return exp(delta);
 	}
 
 	void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
@@ -132,12 +132,11 @@ namespace solver {
 
 	void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
 		double Fr = DBL_MAX, L = DBL_MIN, R, LB, delta = DBL_MIN, loc, rs;
-		double *step, *x, *x1, *Fx, *Fx1;
-		double *temp;
+		double *step, *x, *Fvalues;
+		int point;
 		step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
 		x = (double*)malloc(dim * sizeof(double)); //algorithm now needs to evaluate function in two adjacent point at the same time
-		x1 = (double*)malloc(dim * sizeof(double));
-		if ((step == nullptr) || (x == nullptr) || (x1 == nullptr)) {
+		if ((step == nullptr) || (x == nullptr)) {
 			*dL = -100;
 			return;
 		}
@@ -146,62 +145,32 @@ namespace solver {
 			delta = step[i] > delta ? step[i] : delta;
 		}
 		delta = delta * 0.5 * dim;
-		R = getR(delta);	//value of r for this dimension
-		int allnodes = (int)(pow(nodes, dim - 1));
-		int neighbour, tk;
-		Fx = (double*)malloc(allnodes * sizeof(double));
-		Fx1 = (double*)malloc(allnodes * sizeof(double));
-		if ((Fx == nullptr) || (Fx1 == nullptr)) {
+		R = getR(delta);	//value of r
+		int allnodes = (int)pow(nodes, dim);
+		Fvalues = (double*)malloc(allnodes * sizeof(double));
+		if (Fvalues == nullptr) {
 			*dL = -100;
 			return;
 		}
-		x[0] = a[0];
-		for (int point = 0; point < allnodes; point++) {
-			tk = point;
-			for (int k = dim - 1; k > 0; k--) {
-				int t = tk % nodes;
-				tk = (int)(tk / nodes);
+		for (int j = 0; j < allnodes; j++) {
+			point = j;
+			for (int k = dim - 1; k >= 0; k--) {
+				int t = point % nodes;
+				point = (int)(point / nodes);
 				x[k] = a[k] + t * step[k];
 			}
 			rs = compute(x);
+			Fvalues[j] = rs;
 			fevals++;
-			Fx[point] = rs;
 			Fr = rs < Fr ? rs : Fr;
 		}
-		for (int it = 1; it < nodes; it++) {
-			x[0] += step[0];
-			for (int point = 0; point < allnodes; point++) {
-				tk = point;
-				for (int k = dim - 1; k > 0; k--) {
-					int t = tk % nodes;
-					tk = (int)(tk / nodes);
-					x[k] = a[k] + t * step[k];
-				}
-				rs = compute(x);
-				fevals++;
-				Fx1[point] = rs;
-				Fr = rs < Fr ? rs : Fr;
-			}
-			for (int point = 0; point < allnodes; point++) {
-				loc = fabs(Fx[point] - Fx1[point]) / step[0];
-				L = loc > L ? loc : L;
-				for (int n = 0; n < dim - 1; n++) {
-					neighbour = point + (int)pow(nodes,n);
-					if (neighbour < allnodes) {
-						loc = fabs(Fx[point] - Fx[neighbour]) / step[dim - 1 - n];
-						L = loc > L ? loc : L;
-					}
-				}
-			}
-			temp = Fx;
-			Fx = Fx1;
-			Fx1 = temp;
-		}
-		for (int point = 0; point < allnodes; point++) {
-			for (int n = 0; n < dim - 1; n++) {
-				neighbour = point + (int)(pow(nodes, n));
+
+		for (int j = 0; j < allnodes; j++) {
+			int neighbour;
+			for (int k = 0; k < dim; k++) {
+				neighbour = j + (int)pow(nodes, k);
 				if (neighbour < allnodes) {
-					loc = fabs(Fx[point] - Fx[neighbour]) / step[dim - 1 - n];
+					loc = fabs(Fvalues[j] - Fvalues[neighbour]) / step[dim - 1 - k];
 					L = loc > L ? loc : L;
 				}
 			}
@@ -210,8 +179,8 @@ namespace solver {
 		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;
-		free(step); free(x); free(x1);
-		free(Fx); free(Fx1);
+		free(step); free(x);
+		free(Fvalues);
 		*Frp = Fr;
 		*LBp = LB;
 	}
