@@ -1,20 +1,18 @@
 #include <cfloat>
 #include <cmath>
 #include <iostream>
-#include "solver.h"
+#include <fstream>
+#include "solver_greedy.h"
 
 namespace solver {
 	double eps = 100; //accuracy (100 is default value)
 	double UPB, LOB, deltaL, glob = DBL_MAX; //obtained upped bound, lower bound, value of delta*L, and real global minimizer
-	double sqrt2 = sqrt(2.0);
-
 	int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
-	int fevals = 0;
+	int fevals = 0, iters = 0;
 
 	double(*compute)(double *x) = nullptr;
 
 	struct part {	//description of hyperinterval
-		int size;
 		double *a = nullptr;
 		double *b = nullptr;
 		double LocUP, LocLO, deltaL;
@@ -22,8 +20,9 @@ namespace solver {
 
 
 	struct Partitions {		//all hyperintervals obtained on current step of algorithm
-		int size;									//like std::vector, but in C language with only needed methods
-		int cur_alloc; //memory already allocated for array of struct part
+		const int chunk = 16;
+		int size;			//like std::vector, but in C language with only needed methods
+		int cur_alloc;		//memory already allocated for array of struct part
 		struct part* base;
 		Partitions() {
 			size = 0;
@@ -50,11 +49,11 @@ namespace solver {
 				free(base);
 			cur_alloc = 0;
 		}
-		int add(double* toa, double *tob, int dim) {
+		int add(const double* toa, const double *tob) {
 			if (cur_alloc == 0) {
-				base = (struct part*)malloc(16 * sizeof(struct part));
+				base = (struct part*)malloc(chunk * sizeof(struct part));
 				if (base) {
-					cur_alloc = 16;
+					cur_alloc = chunk;
 				}
 				else {
 					std::cerr << "Error alloc" << std::endl;
@@ -63,9 +62,9 @@ namespace solver {
 				}
 			}
 			if (size == cur_alloc) {
-				base = (struct part*)realloc(base, (cur_alloc + 16) * sizeof(struct part));
+				base = (struct part*)realloc(base, (cur_alloc + chunk) * sizeof(struct part));
 				if (base) {
-					cur_alloc += 16;
+					cur_alloc += chunk;
 				}
 				else {
 					std::cerr << "Error alloc" << std::endl;
@@ -73,7 +72,6 @@ namespace solver {
 					return -1;
 				}
 			}
-			base[size].size = dim;
 			base[size].a = (double*)malloc(dim * sizeof(double));
 			base[size].b = (double*)malloc(dim * sizeof(double));
 			if ((!base[size].a) || (!base[size].b)) {
@@ -97,7 +95,7 @@ namespace solver {
 		Partitions & operator=(Partitions& P) {
 			erase();
 			for (int i = 0; i < P.size; i++) {
-				add(P[i].a, P[i].b, P[i].size);
+				add(P[i].a, P[i].b);
 			}
 			return (*this);
 		}
@@ -106,21 +104,21 @@ namespace solver {
 
 	Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
-	double getR(double delta) { //r value for formula for estimating Lipschitz constant
+	double getR(const double delta) { //r value for formula for estimating Lipschitz constant
 		return exp(delta);
 	}
 
-	void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
+	void UpdateRecords(const double LU, const double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
 		if (LU < UPB) {
 			UPB = LU;
 			LOB = LL;
 		}
 	}
 
-	int ChooseDim(double *a, double *b) { //selection of coordinate for hyperinterval division
+	int ChooseDim(const double *a, const double *b) { //selection of coordinate for hyperinterval division
 		double max = DBL_MIN, cr;
-		int maxI = 0;
-		for (int i = 0; i < dim; i++) {
+		int i, maxI = 0;
+		for (i = 0; i < dim; i++) {
 			cr = fabs(b[i] - a[i]);
 			if (cr > max) {
 				max = cr;
@@ -130,26 +128,24 @@ namespace solver {
 		return maxI;
 	}
 
-	void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
-		double Fr = DBL_MAX, L = DBL_MIN, R, Fx, Fx1, LB;
-		double curR, curdelta = DBL_MIN;
+	void GridEvaluator(const double *a, const double *b, double *Frp, double *LBp, double *dL) {
+		double Fr = DBL_MAX, L = DBL_MIN, Fx, Fx1, LB;
+		double R, delta = DBL_MIN;
 		double *step, *x, *x1;
-		int tk;
+		int i;
 		step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
 		x = (double*)malloc(dim * sizeof(double)); //algorithm now needs to evaluate function in two adjacent point at the same time
 		x1 = (double*)malloc(dim * sizeof(double));
-		for (int i = 0; i < dim; i++) {
+		for (i = 0; i < dim; i++) {
 			step[i] = fabs(b[i] - a[i]) / (nodes - 1);
-			curdelta = step[i] > curdelta ? step[i] : curdelta;
+			delta = step[i] > delta ? step[i] : delta;
 		}
-		curdelta = curdelta * 0.5 * dim;
-		curR = getR(curdelta);	//value of r for this dimension
-		for (int i = 0; i < dim; i++) { //i - размерность, по которой считаем соседние точки
-			R = getR(step[i]);
-			double loc;
-			int allpoints = static_cast<int>(pow(nodes, dim - 1));
+		delta = delta * 0.5 * dim;
+		R = getR(delta);	//value of r for this dimension
+		for (i = 0; i < dim; i++) { //i - размерность, по которой считаем соседние точки
+			int allpoints = (int)(pow(nodes, dim - 1));
 			for (int ind = 0; ind < allpoints; ind++) {
-				tk = ind;
+				int tk = ind;
 				for (int k = 0; k < dim; k++) {
 					if (k != i) {
 						int t = tk % nodes;
@@ -169,14 +165,15 @@ namespace solver {
 					Fx1 = compute(x1);
 					fevals += 2;
 					Fr = Fx < Fr ? Fx : Fr;
-					loc = fabs(Fx - Fx1) / step[i];
+					Fr = Fx1 < Fr ? Fx1 : Fr;
+					double loc = fabs(Fx - Fx1) / step[i];
 					L = loc > L ? loc : L;
 					x[i] += step[i];
 				}//to here function evaluation
 			}
 		}
 		//final calculation
-		LB = curR * L * curdelta;
+		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;
 		free(step); free(x); free(x1);
@@ -184,8 +181,9 @@ namespace solver {
 		*LBp = LB;
 	}
 
-	int min_search(double *a, double* b) { 
+	int min_search(const double *a, const double* b) { 
 		fevals = 0;
+		iters = 0;
 		UPB = DBL_MAX;	//upper bound
 		if (glob == DBL_MAX) {	//check if uninitialized values
 			return -1;
@@ -194,7 +192,7 @@ namespace solver {
 			return -2;
 		}
 
-		P.add(a, b, dim);	//add first hyperinterval
+		P.add(a, b);	//add first hyperinterval
 
 		double *a1, *b1;
 		//if hyperinterval divides, 2 new hyperintervals with bounds [a..b1] [a1..b] creates
@@ -202,25 +200,24 @@ namespace solver {
 		b1 = (double*)malloc(dim * sizeof(double));
 
 		if ((a1 == nullptr) || (b1 == nullptr)) {
+			std::cerr << "Problem with memory allocation" << std::endl;
 			return -3;
 		}
 
 		while (P.size != 0) {	//each hyperinterval can be subdivided or pruned (if non-promisiable or fits accuracy)
-			unsigned int parts = P.size;
+			unsigned int parts = P.size, i;
+			iters += parts;
 
-			for (unsigned int i = 0; i < parts; i++) {
+			for (i = 0; i < parts; i++) {
 				double lUPB, lLOB, ldeltaL;
 				GridEvaluator(P[i].a, P[i].b, &lUPB, &lLOB, &ldeltaL);
 				P[i].LocLO = lLOB;
 				P[i].LocUP = lUPB;
 				P[i].deltaL = ldeltaL;
+				UpdateRecords(lUPB, lLOB);
 			}
 
-			for (unsigned int i = 0; i < parts; i++) {
-				UpdateRecords(P[i].LocUP, P[i].LocLO);
-			}
-
-			for (unsigned int i = 0; i < parts; i++) {
+			for (i = 0; i < parts; i++) {
 				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
 					int choosen = ChooseDim(P[i].a, P[i].b);
 
@@ -234,8 +231,8 @@ namespace solver {
 							b1[j] = a1[j];
 						}
 					}
-					P1.add(P[i].a, b1, dim);
-					P1.add(a1, P[i].b, dim);
+					P1.add(P[i].a, b1);
+					P1.add(a1, P[i].b);
 				}
 			}
 
