@@ -1,7 +1,6 @@
 #include <cfloat>
 #include <cmath>
 #include <iostream>
-#include <fstream>
 #include "solver.h"
 
 namespace solver {
