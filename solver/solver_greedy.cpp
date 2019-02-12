@@ -7,7 +7,8 @@ namespace solver {
 	double eps = 100; //accuracy (100 is default value)
 	double UPB, LOB, deltaL, glob = DBL_MAX; //obtained upped bound, lower bound, value of delta*L, and real global minimizer
 	int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
-	int fevals = 0, iters = 0;
+	unsigned long long int fevals = 0;
+	unsigned long int iters = 0;
 
 	double(*compute)(double *x) = nullptr;
 

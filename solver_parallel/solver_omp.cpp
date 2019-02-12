@@ -7,16 +7,13 @@
 namespace solver {
 	double eps = 100; //accuracy (100 is default value)
 	double UPB, LOB, deltaL, glob = DBL_MAX; //obtained upped bound, lower bound, value of delta*L, and real global minimizer
-	double sqrt2 = sqrt(2.0);
-	int np;
-
-	int nodes = 3, dim = 2; //amount of nodes per dimension, amount of dimensions in task
-	int fevals = 0;
+	int nodes = 3, dim = 2, np = 0; //amount of nodes per dimension, amount of dimensions in task
+	unsigned long long int fevals = 0;
+	unsigned long int iters = 0;
 
 	double(*compute)(double *x) = nullptr;
 
 	struct part {	//description of hyperinterval
-		int size;
 		double *a = nullptr;
 		double *b = nullptr;
 		double LocUP, LocLO, deltaL;
@@ -24,8 +21,9 @@ namespace solver {
 
 
 	struct Partitions {		//all hyperintervals obtained on current step of algorithm
-		int size;									//like std::vector, but in C language with only needed methods
-		int cur_alloc; //memory already allocated for array of struct part
+		const int chunk = 16;
+		int size;			//like std::vector, but in C language with only needed methods
+		int cur_alloc;		//memory already allocated for array of struct part
 		struct part* base;
 		Partitions() {
 			size = 0;
@@ -52,11 +50,11 @@ namespace solver {
 				free(base);
 			cur_alloc = 0;
 		}
-		int add(double* toa, double *tob, int dim) {
+		int add(const double* toa, const double *tob) {
 			if (cur_alloc == 0) {
-				base = (struct part*)malloc(16 * sizeof(struct part));
+				base = (struct part*)malloc(chunk * sizeof(struct part));
 				if (base) {
-					cur_alloc = 16;
+					cur_alloc = chunk;
 				}
 				else {
 					std::cerr << "Error alloc" << std::endl;
@@ -65,9 +63,9 @@ namespace solver {
 				}
 			}
 			if (size == cur_alloc) {
-				base = (struct part*)realloc(base, (cur_alloc + 16) * sizeof(struct part));
+				base = (struct part*)realloc(base, (cur_alloc + chunk) * sizeof(struct part));
 				if (base) {
-					cur_alloc += 16;
+					cur_alloc += chunk;
 				}
 				else {
 					std::cerr << "Error alloc" << std::endl;
@@ -75,7 +73,6 @@ namespace solver {
 					return -1;
 				}
 			}
-			base[size].size = dim;
 			base[size].a = (double*)malloc(dim * sizeof(double));
 			base[size].b = (double*)malloc(dim * sizeof(double));
 			if ((!base[size].a) || (!base[size].b)) {
@@ -92,14 +89,14 @@ namespace solver {
 		}
 		part & operator[](int n) {
 			if (n > size - 1) {
-				std::cerr << "Out of size" <<std::endl;
+				std::cerr << "Out of size" << std::endl;
 			}
 			return base[n];
 		}
 		Partitions & operator=(Partitions& P) {
 			erase();
 			for (int i = 0; i < P.size; i++) {
-				add(P[i].a, P[i].b, P[i].size);
+				add(P[i].a, P[i].b);
 			}
 			return (*this);
 		}
@@ -108,21 +105,21 @@ namespace solver {
 
 	Partitions P, P1; //P - hyperintervals on current step, P1 - hyperintervals on next step
 
-	double getR(double delta) { //r value for formula for estimating Lipschitz constant
+	double getR(const double delta) { //r value for formula for estimating Lipschitz constant
 		return exp(delta);
 	}
 
-	void UpdateRecords(double LU, double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
+	void UpdateRecords(const double LU, const double LL) { //UPB - global upper bound, LU - local value of upper bound on current hyperinterval
 		if (LU < UPB) {
 			UPB = LU;
 			LOB = LL;
 		}
 	}
 
-	int ChooseDim(double *a, double *b) { //selection of coordinate for hyperinterval division
+	int ChooseDim(const double *a, const double *b) { //selection of coordinate for hyperinterval division
 		double max = DBL_MIN, cr;
-		int maxI = 0;
-		for (int i = 0; i < dim; i++) {
+		int i, maxI = 0;
+		for (i = 0; i < dim; i++) {
 			cr = fabs(b[i] - a[i]);
 			if (cr > max) {
 				max = cr;
@@ -133,24 +130,14 @@ namespace solver {
 	}
 
 	void GridEvaluator(double *a, double *b, double *Frp, double *LBp, double *dL) {
-		double Fr = DBL_MAX, L = DBL_MIN, R, LB, delta = DBL_MIN, loc;
-		double *step, *Fvalues, *PL;
-		//double *x;
-		double **x;
+		double Fr = DBL_MAX, L = DBL_MIN, R, LB, delta = DBL_MIN;
+		double *step, *Fvalues;
+		double *x;
 		int point;
 		step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
-		x = (double**)malloc(np * sizeof(double*));
-		PL = (double*)malloc(np * sizeof(double));
-		if ((step == nullptr) || (PL == nullptr) || (x == nullptr)) {
+		if ((step == nullptr)) {
 			*dL = -100;
 			return;
-		}
-		for (int i = 0; i < np; i++) {
-			x[i] = (double*)malloc(dim * sizeof(double));
-			if (x[i] == nullptr) {
-				*dL = -100;
-				return;
-			}
 		}
 		for (int i = 0; i < dim; i++) {
 			step[i] = fabs(b[i] - a[i]) / (nodes - 1);
@@ -164,57 +151,55 @@ namespace solver {
 			*dL = -100;
 			return;
 		}
-#pragma omp parallel for private(point) shared(x,dim,nodes,step,a,Fvalues,fevals)
-		for (int j = 0; j < allnodes; j++) {
-			//x = (double*)malloc(dim * sizeof(double));
-			point = j;
-			int nt = omp_get_thread_num();
-			for (int k = dim - 1; k >= 0; k--) {
-				int t = point % nodes;
-				point = (int)(point / nodes);
-				x[nt][k] = a[k] + t * step[k];
-				//x[k] = a[k] + t * step[k];
-			}
-			Fvalues[j] = compute(x[nt]);
-			//Fvalues[j] = compute(x);
-#pragma omp atomic
-			fevals++;
-			//free(x);
+#pragma omp parallel private(x) shared(dim, nodes,  step, a, Fvalues)
+		{
+			x = (double*)malloc(dim * sizeof(double));
+#pragma omp for reduction(min:Fr)
+				for (int j = 0; j < allnodes; j++) {
+					int point = j;
+					for (int k = dim - 1; k >= 0; k--) {
+						int t = point % nodes;
+						point = (int)(point / nodes);
+						x[k] = a[k] + t * step[k];
+					}
+					double rs = compute(x);
+					Fvalues[j] = rs;
+					if (rs < Fr) {
+						Fr = rs;
+					}
+				}
+				free(x);
 		}
-		for (int j = 0; j < allnodes; j++) {
-			Fr = Fvalues[j] < Fr ? Fvalues[j] : Fr;
-		}
-#pragma omp parallel for private(loc) shared(PL,dim,allnodes,Fvalues)
+		fevals += allnodes;
+
+#pragma omp parallel for shared(dim,allnodes,Fvalues) reduction (max:L)
 		for (int j = 0; j < allnodes; j++) {
 			int neighbour;
-			int nt = omp_get_thread_num();
+			double loc = DBL_MIN;
 			for (int k = 0; k < dim; k++) {
-				neighbour = j + (int)pow(nodes, k);
-				if (neighbour < allnodes) {
+				int board = (int)pow(nodes, k + 1);
+				neighbour = j + board / nodes;
+				if ((neighbour < allnodes) && ((j / board) == (neighbour / board))) {
 					loc = fabs(Fvalues[j] - Fvalues[neighbour]) / step[dim - 1 - k];
-					PL[nt] = loc > PL[nt] ? loc : PL[nt];
+				}
+				if (loc > L) {
+					L = loc;
 				}
 			}
-		}
-		for (int i = 0; i < np; i++) {
-			L = PL[i] > L ? PL[i] : L;
 		}
 		//final calculation
 		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;
-		free(step); 
-		free(PL);
-		for (int i = 0; i < np; i++)
-			free(x[i]);
-		free(x);
+		free(step);
 		free(Fvalues);
 		*Frp = Fr;
 		*LBp = LB;
 	}
 
-	int min_search(double *a, double* b) {
+	int min_search(const double *a, const double* b) {
 		fevals = 0;
+		iters = 0;
 		UPB = DBL_MAX;	//upper bound
 		if (glob == DBL_MAX) {	//check if uninitialized values
 			return -1;
@@ -223,10 +208,13 @@ namespace solver {
 			return -2;
 		}
 
-		np = omp_get_num_procs();
+		if (np <= 0) {
+			np = omp_get_num_procs();
+		}
 		omp_set_dynamic(0);
 		omp_set_num_threads(np);
-		P.add(a, b, dim);	//add first hyperinterval
+
+		P.add(a, b);	//add first hyperinterval
 
 		double *a1, *b1;
 		//if hyperinterval divides, 2 new hyperintervals with bounds [a..b1] [a1..b] creates
@@ -234,31 +222,25 @@ namespace solver {
 		b1 = (double*)malloc(dim * sizeof(double));
 
 		if ((a1 == nullptr) || (b1 == nullptr)) {
+			std::cerr << "Problem with memory allocation" << std::endl;
 			return -3;
 		}
 
 		while (P.size != 0) {	//each hyperinterval can be subdivided or pruned (if non-promisiable or fits accuracy)
-			unsigned int parts = P.size;
+			unsigned int parts = P.size, i;
+			iters += parts;
 
-			for (unsigned int i = 0; i < parts; i++) {
+			for (i = 0; i < parts; i++) {
 				double lUPB, lLOB, ldeltaL;
 				GridEvaluator(P[i].a, P[i].b, &lUPB, &lLOB, &ldeltaL);
-				if (ldeltaL > 0) {
-					P[i].LocLO = lLOB;
-					P[i].LocUP = lUPB;
-					P[i].deltaL = ldeltaL;
-				}
-				else {
-					return -3;
-				}
+				P[i].LocLO = lLOB;
+				P[i].LocUP = lUPB;
+				P[i].deltaL = ldeltaL;
+				UpdateRecords(lUPB, lLOB);
 			}
 
-			for (unsigned int i = 0; i < parts; i++) {
-				UpdateRecords(P[i].LocUP, P[i].LocLO);
-			}
-
-			for (unsigned int i = 0; i < parts; i++) {
-				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
+			for (i = 0; i < parts; i++) {
+				if (!((P[i].LocLO >(UPB - eps)) || (P[i].deltaL < eps))) {
 					int choosen = ChooseDim(P[i].a, P[i].b);
 
 					for (int j = 0; j < dim; j++) { //make new edges for 2 new hyperintervals:
@@ -271,8 +253,8 @@ namespace solver {
 							b1[j] = a1[j];
 						}
 					}
-					P1.add(P[i].a, b1, dim);
-					P1.add(a1, P[i].b, dim);
+					P1.add(P[i].a, b1);
+					P1.add(a1, P[i].b);
 				}
 			}
 
@@ -287,7 +269,7 @@ namespace solver {
 	void checkErrors(int code) {
 		switch (code) {
 		case -1:
-			std::cerr << "glob value have not been initialized!" <<std::endl;
+			std::cerr << "glob value have not been initialized!" << std::endl;
 			break;
 		case -2:
 			std::cerr << "Pointer to computing function (*compute) have not been initialized!" << std::endl;

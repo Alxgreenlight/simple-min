@@ -2,7 +2,9 @@
 #define SOLVER_OMP_H
 
 namespace solver {
-	extern int nodes, dim, fevals;
+	extern int nodes, dim;
+	extern unsigned long long int fevals;
+	extern unsigned long int iters;
 	extern double eps;
 	extern double UPB, LOB, deltaL, glob;
 	extern double(*compute)(double *x);
