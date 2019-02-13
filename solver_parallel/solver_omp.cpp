@@ -133,7 +133,6 @@ namespace solver {
 		double Fr = DBL_MAX, L = DBL_MIN, R, LB, delta = DBL_MIN;
 		double *step, *Fvalues;
 		double *x;
-		int point;
 		step = (double*)malloc(dim * sizeof(double)); //step of grid in every dimension
 		if ((step == nullptr)) {
 			*dL = -100;
