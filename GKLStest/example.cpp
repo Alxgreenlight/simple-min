@@ -22,6 +22,7 @@ int main()
 {
 	int error_code;    /* error codes variable */
 	int func_num;      /* test function number within a class     */
+	double maxdiff = DBL_MIN;
 	std::ofstream fp;
 
 	std::cout << "GKLS-Generator of Classes of ND, D, and D2 Test Functions";
@@ -142,10 +143,12 @@ int main()
 
 		auto end = sc.now();
 		auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+		double diff = 1.0*fabs(solver::glob - solver::UPB);
+		maxdiff = diff > maxdiff ? diff : maxdiff;
 		fp << "Search complete:" << std::endl << "Upper bound: " << std::setprecision(4) << solver::UPB << std::endl << \
 			"Real global minimum: " << std::setprecision(4) << solver::glob << std::endl << "Lower bound: " << std::setprecision(4) << \
-			solver::LOB << std::endl << "Diff: " << std::setprecision(4) << 1.0*fabs(solver::glob - solver::UPB) << std::endl;
-		fp << "Function evaluations: " << solver::fevals << std::endl;
+			solver::LOB << std::endl << "Diff: " << std::setprecision(4) << diff << std::endl;
+		fp << "Function evaluations: " << solver::fevals << " in " << solver::iters << " iterations" << std::endl;
 		fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
 		fp << std::endl << std::endl;
 
@@ -160,6 +163,7 @@ int main()
 	auto atime_span = std::chrono::duration_cast<std::chrono::seconds>(aend - astart);
 
 	fp << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
+	fp << "Maximum difference in this set: " << maxdiff << std::endl;
 	std::cout << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
 
 	/* Close files */
