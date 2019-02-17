@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <limits>
 #include "../solver/solver.h"
 
 extern "C" {
@@ -22,7 +23,7 @@ int main()
 {
 	int error_code;    /* error codes variable */
 	int func_num;      /* test function number within a class     */
-	double maxdiff = DBL_MIN;
+	double maxdiff = std::numeric_limits<double>::min();
 	std::ofstream fp;
 
 	std::cout << "GKLS-Generator of Classes of ND, D, and D2 Test Functions";

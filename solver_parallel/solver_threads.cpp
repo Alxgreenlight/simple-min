@@ -1,7 +1,7 @@
 #include <cfloat>
 #include <cmath>
 #include <iostream>
-#include "solver_omp.h"
+#include "solver_threads.h"
 #include <thread>
 #include <vector>
 
@@ -145,14 +145,14 @@ namespace solver {
 		}
 	}
 
-	void LVal(int e1, int e2, int allnodes, const double *Fvalues, const double *step, double *PL) {
+	void LVal(int e1, int e2, int nt, int allnodes, const double *Fvalues, const double *step, double *PL) {
 		for (int j = e1; j < e2; j++) {
 			int neighbour;
 			for (int k = 0; k < dim; k++) {
 				neighbour = j + (int)pow(nodes, k);
 				if (neighbour < allnodes) {
 					double loc = fabs(Fvalues[j] - Fvalues[neighbour]) / step[dim - 1 - k];
-					(*PL) = loc > (*PL) ? loc : (*PL);
+					PL[nt] = loc > PL[nt] ? loc : PL[nt];
 				}
 			}
 		}
@@ -208,7 +208,7 @@ namespace solver {
 		for (int i = 0; i < np; i++) {
 			e1 = i * st;
 			e2 = i == (np - 1) ? allnodes : (i + 1)*st;
-			std::thread th(LVal, e1, e2, allnodes, std::cref(Fvalues), std::cref(step), std::ref(PL[i]));
+			std::thread th(LVal, e1, e2, i, allnodes, std::cref(Fvalues), std::cref(step), std::ref(PL));
 			v.push_back(std::move(th));
 		}
 		for (auto &t : v) {

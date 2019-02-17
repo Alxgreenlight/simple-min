@@ -14,7 +14,6 @@
 
 
 #include <math.h>
-#include <stdlib.h>
 #include "vagris.h"
 
 double rand_minimums[]={
@@ -137,13 +136,13 @@ static unsigned char matcon[10][45]={
 };
 static unsigned char icnf[45];
 static double af[7][7],bf[7][7],cf[7][7],df[7][7];
-static double snx[7],csx[7],sny[7],csy[7];
 
 
 double random_func(double x, double y)
 {
     int i,j;
     double d1,d2,sx1,cx1,sy1,cy1;
+    double snx[7],csx[7],sny[7],csy[7];
 
     d1=M_PI*x;
     d2=M_PI*y;
@@ -169,88 +168,6 @@ double random_func(double x, double y)
             d2=d2+cf[i][j]*snx[i]*sny[j]-df[i][j]*csx[i]*csy[j];
         }
     return(-sqrt(d1*d1+d2*d2));
-}
-
-double random_pfuncx(double x, double y)
-{
-    int i,j;
-	 double dd,d1,d2,t1,t2,sx1,cx1,sy1,cy1;
-
-    d1=M_PI*x;
-    d2=M_PI*y;
-    sx1=sin(d1);
-    cx1=cos(d1);
-    sy1=sin(d2);
-    cy1=cos(d2);
-    snx[0]=sx1;
-    csx[0]=cx1;
-    sny[0]=sy1;
-    csy[0]=cy1;
-    for(i=0;i<6;i++){
-        snx[i+1]=snx[i]*cx1+csx[i]*sx1;
-        csx[i+1]=csx[i]*cx1-snx[i]*sx1;
-        sny[i+1]=sny[i]*cy1+csy[i]*sy1;
-        csy[i+1]=csy[i]*cy1-sny[i]*sy1;
-    }
-    d1=0;
-    d2=0;
-    for(i=0;i<7;i++)
-        for(j=0;j<7;j++){
-            d1=d1+af[i][j]*snx[i]*sny[j]+bf[i][j]*csx[i]*csy[j];
-            d2=d2+cf[i][j]*snx[i]*sny[j]-df[i][j]*csx[i]*csy[j];
-        }
-    dd=sqrt(d1*d1+d2*d2);
-	 t1=0;
-	 t2=0;
-    for(i=0;i<7;i++)
-        for(j=0;j<7;j++){
-				t1+= af[i][j]*M_PI*(i+1)*csx[i]*sny[j];
-				t1-= bf[i][j]*M_PI*(i+1)*snx[i]*csy[j];
-				t2+= cf[i][j]*M_PI*(i+1)*csx[i]*sny[j];
-				t2+= df[i][j]*M_PI*(i+1)*snx[i]*csy[j];
-        }
-	 return(-(t1*d1+t2*d2)/dd);
-}
-
-double random_pfuncy(double x, double y)
-{
-    int i,j;
-	 double dd,d1,d2,t1,t2,sx1,cx1,sy1,cy1;
-
-    d1=M_PI*x;
-    d2=M_PI*y;
-    sx1=sin(d1);
-    cx1=cos(d1);
-    sy1=sin(d2);
-    cy1=cos(d2);
-    snx[0]=sx1;
-    csx[0]=cx1;
-    sny[0]=sy1;
-    csy[0]=cy1;
-    for(i=0;i<6;i++){
-        snx[i+1]=snx[i]*cx1+csx[i]*sx1;
-        csx[i+1]=csx[i]*cx1-snx[i]*sx1;
-        sny[i+1]=sny[i]*cy1+csy[i]*sy1;
-        csy[i+1]=csy[i]*cy1-sny[i]*sy1;
-    }
-    d1=0;
-    d2=0;
-    for(i=0;i<7;i++)
-        for(j=0;j<7;j++){
-            d1=d1+af[i][j]*snx[i]*sny[j]+bf[i][j]*csx[i]*csy[j];
-            d2=d2+cf[i][j]*snx[i]*sny[j]-df[i][j]*csx[i]*csy[j];
-        }
-    dd=sqrt(d1*d1+d2*d2);
-	 t1=0;
-	 t2=0;
-    for(i=0;i<7;i++)
-        for(j=0;j<7;j++){
-				t1+= af[i][j]*M_PI*(j+1)*snx[i]*csy[j];
-				t1-= bf[i][j]*M_PI*(j+1)*csx[i]*sny[j];
-				t2+= cf[i][j]*M_PI*(j+1)*snx[i]*csy[j];
-				t2+= df[i][j]*M_PI*(j+1)*csx[i]*sny[j];
-        }
-	 return(-(t1*d1+t2*d2)/dd);
 }
 
 void set_random(int nf)

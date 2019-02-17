@@ -1,7 +1,7 @@
 #include <cfloat>
 #include <cmath>
 #include <iostream>
-#include "solver_greedy.h"
+#include "solver.h"
 
 namespace solver {
 	double eps = 100; //accuracy (100 is default value)

@@ -37,7 +37,7 @@ int main()
 	std::cout << std::endl << "for Global Optimization,";
 	std::cout << std::endl << "(C) 2002-2003, M.Gaviano, D.E.Kvasov, D.Lera, and Ya.D.Sergeyev" << std::endl << std::endl;
 
-	GKLS_dim = 2;
+	GKLS_dim = 3;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
