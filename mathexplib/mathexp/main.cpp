@@ -72,7 +72,7 @@ void testBench(const BM& bm, std::ofstream& fp) {
 	return;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 	std::ofstream fp;
 	fp.open("results.txt", std::ios::out);
 	if (!fp.is_open()) {
@@ -96,13 +96,27 @@ int main() {
 		std::cerr << "Please, repeat input" << std::endl;
 	}
 
-	std::cout << "Set max dim for evaluate" << std::endl << "0 = unlimited (full benchmark)" << std::endl;
-	int maxdim;
-	std::cin >> maxdim;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
+	int maxdim, mindim = 0;
+	if (argc == 1) {
+		std::cout << "Set max dim for evaluate" << std::endl << "0 = unlimited (full benchmark)" << std::endl;
+		std::cin >> maxdim;
+		while (std::cin.fail()) {
+			std::cerr << "Please, repeat input" << std::endl;
+		}
+		if (!maxdim) maxdim = std::numeric_limits<int>::max();
 	}
-	if (!maxdim) maxdim = std::numeric_limits<int>::max();
+	try {
+		if (argc == 2) maxdim = std::stoi(argv[1]);
+		if (argc == 3) {
+			mindim = std::stoi(argv[1]);
+			maxdim = std::stoi(argv[2]);
+		}
+	}
+	catch (std::exception const & e)
+	{
+		std::cerr << "error : " << e.what() << std::endl;
+	}
+
 	auto astart = sc.now();
 	/*ZakharovBenchmark<double> zb(3);
 	ptr = &zb;
@@ -111,7 +125,7 @@ int main() {
 	Benchmarks<double> tests;
 	for (auto bm : tests) {
 		ptr = &(*bm);
-		if (bm->getDim() <= maxdim) {
+		if ((bm->getDim() <= maxdim)&&(bm->getDim() >= mindim)) {
 			testBench(*bm, fp);
 			std::cout << '|';
 		}
