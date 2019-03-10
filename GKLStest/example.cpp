@@ -3,8 +3,10 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <limits>
-#include "../solver/solver.h"
+#include <iterator>
+#include "../solver/gridsolver.hpp"
+
+/* Including GKLS libraries, writen with C language */
 
 extern "C" {
 #include "gkls.h"
@@ -12,30 +14,33 @@ extern "C" {
 }
 
 
-double *a, *b; //sets the search area for task
+double *a, *b, *x, *xc; /* sets the search area for task */
 
-void print_error_msg(int);
+void print_error_msg(int);	/* print error in GKLS */
 
-std::chrono::steady_clock sc; //for runtime measurement
+std::chrono::steady_clock sc; /* for runtime measurement */
+
+double func(const double* x) {	/* wrapper for function providing to solver */
+	for (unsigned int i = 0; i < GKLS_dim; i++) {
+		xc[i] = x[i];
+	}
+	double r = GKLS_D_func(xc);
+					/* GKLS_ND_func; -- for ND-type test function */
+					/* GKLS_D2_func; -- for D2-type test function */
+	return r;
+}
 
 
 int main()
 {
 	int error_code;    /* error codes variable */
 	int func_num;      /* test function number within a class     */
-	double maxdiff = std::numeric_limits<double>::min();
-	std::ofstream fp;
+	double maxdiff = DBL_MIN;	/* maximum error among all solutions */
+	std::ofstream fp;	/* output file stream */
+	int nodes;	/* Number of nodes per dimension */
+	double eps;	/* required accuracy */
 
-	std::cout << "GKLS-Generator of Classes of ND, D, and D2 Test Functions";
-	std::cout << std::endl << "for Global Optimization,";
-	std::cout << std::endl << "(C) 2002-2003, M.Gaviano, D.E.Kvasov, D.Lera, and Ya.D.Sergeyev" << std::endl << std::endl;
-
-
-	/* Set the input parameters */
-	/*if ((error_code=GKLS_set_default()) != GKLS_OK) {
-		print_error_msg(error_code);
-		return error_code;
-	}*/
+	/* Set parameters of GKLS */
 	GKLS_dim = 2;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
@@ -46,8 +51,10 @@ int main()
 	if ((error_code = GKLS_parameters_check()) != GKLS_OK)
 		return error_code;
 
-	solver::dim = GKLS_dim;
+	/* Create a solver object */
+	GridSolverOMP<double> gs;
 
+	/* Try to open output file */
 	fp.open("results.txt", std::ios::out);
 	if (!fp.is_open()) {
 		std::cerr << "Problem with file..." << std::endl;
@@ -56,41 +63,56 @@ int main()
 		return -1;
 	}
 
+	/* Set parametrs of method */
+
 	std::cout << "Set number of nodes per dimension" << std::endl << \
 		"It can significantly affect on performance!" << std::endl;
-	std::cin >> solver::nodes;
+	std::cin >> nodes;
 	while (std::cin.fail()) {
 		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> solver::nodes;
+		std::cin >> nodes;
 	}
 
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> solver::eps;
+	std::cin >> eps;
 	while (std::cin.fail()) {
 		std::cerr << "Please, repeat input" << std::endl;
+		std::cin >> eps;
 	}
 
-	a = new double[solver::dim];
-	b = new double[solver::dim];
+	/* and provide it to solver */
+
+	gs.setparams(nodes, eps);
+
+	/* Allocating required memory */
+
+	a = new double[GKLS_dim];	/* For left bound of search region */
+	b = new double[GKLS_dim];	/* For right bound of search region */
+	x = new double[GKLS_dim];	/* For global minimum coordinates found */
+	xc = new double[GKLS_dim];	/* For internal using in wrapper function */
+
+
+	auto astart = sc.now(); /* start time for full set of tests */
 
 	/* Generate the class of 100 D-type functions */
-	auto astart = sc.now(); //start time for full set of tests
 
 	for (func_num = 1; func_num <= 100; func_num++)
 	{
+		/* Initializing GKLS with set parameters */
+
 		if ((error_code = GKLS_arg_generate(func_num)) != GKLS_OK) {
 			print_error_msg(error_code);
 			return error_code;
 		}
 
-		for (int i = 0; i < solver::dim; i++) {
+		/* set search area for test */
+
+		for (unsigned int i = 0; i < GKLS_dim; i++) {
 			a[i] = GKLS_domain_left[i];
 			b[i] = GKLS_domain_right[i];
-		} //set search area for test
-
-		solver::compute = GKLS_D_func;
-		// solver::compute = GKLS_ND_func; // -- for ND-type test function 
-		// solver::compute = GKLS_D2_func; // -- for D2-type test function 
+		} 
+		
+		/* Output func info */
 
 		std::cout << std::endl << "Generating the function number " << func_num << std::endl;
 
@@ -98,10 +120,9 @@ int main()
 		fp << std::endl << "of the class with the following parameters:";
 		fp << std::endl << "    global minimum value   = " << GKLS_global_value << ';';
 
-		solver::glob = GKLS_global_value;
-
 
 		/* Information about global minimizers */
+
 		if (GKLS_glob.gm_index == 0)
 			fp << std::endl << "An error during the global minimum searching was occurred!";
 		else {
@@ -115,64 +136,79 @@ int main()
 			}
 			for (unsigned int i = 0; i < GKLS_glob.num_global_minima; i++) {
 				fp << i + 1 << ":	";
-				double *x = GKLS_minima.local_min[GKLS_glob.gm_index[i]];
+				double *xcoor = GKLS_minima.local_min[GKLS_glob.gm_index[i]];
 				fp << '[';
-				for (int k = 0; k < solver::dim; k++) {
-					if (k != solver::dim - 1)
-						fp << std::setprecision(3) << x[k] << ' ';
+				for (unsigned int k = 0; k < GKLS_dim; k++) {
+					if (k != GKLS_dim - 1)
+						fp << std::setprecision(3) << xcoor[k] << ' ';
 					else
-						fp << std::setprecision(3) << x[k] << ']' << std::endl;
+						fp << std::setprecision(3) << xcoor[k] << ']' << std::endl;
 				}
 			}
 		}
 
 		/* Function evaluating */
-		auto start = sc.now(); //start time for one function evaluating
 
-		int r = solver::min_search(a, b);
+		auto start = sc.now(); /* start time for one function evaluating */
 
-		if (r) {
-			solver::checkErrors(r);
-			fp.close();
-			delete[]a; delete[]b;
-			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-			std::cin.get();
-			GKLS_free();
-			GKLS_domain_free();
-			return -2;
-		}
+		/* perform a search */
 
+		double UPB = gs.search(GKLS_dim,x,a,b,func);
+
+		/* check if errors during search occured */
+
+		gs.checkErrors(fp);
+
+		/* Number of function evaluations and algorithm iteartions during search */
+		unsigned long long int fevals;
+		unsigned long int iters;
+
+		gs.getinfo(fevals, iters);
+
+		/* Search completed */
 		auto end = sc.now();
 		auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-		double diff = 1.0*fabs(solver::glob - solver::UPB);
+		
+		/* Differece between obtained result and real global minimum */
+		double diff = 1.0*fabs(GKLS_global_value - UPB);
 		maxdiff = diff > maxdiff ? diff : maxdiff;
-		fp << "Search complete:" << std::endl << "Upper bound: " << std::setprecision(4) << solver::UPB << std::endl << \
-			"Real global minimum: " << std::setprecision(4) << solver::glob << std::endl << "Lower bound: " << std::setprecision(4) << \
-			solver::LOB << std::endl << "Diff: " << std::setprecision(4) << diff << std::endl;
-		fp << "Function evaluations: " << solver::fevals << " in " << solver::iters << " iterations" << std::endl;
+
+		/* Output all obtained results */
+
+		fp << "Search complete:" << std::endl << "Upper bound: " << std::setprecision(4) << UPB << std::endl << \
+			"At [";
+		std::copy(x, x + GKLS_dim, std::ostream_iterator<double>(fp, " ")); 
+		fp << "]" << std::endl <<"Real global minimum: " << std::setprecision(4) << GKLS_global_value << std::endl << std::endl << "Diff: " << std::setprecision(4) << diff << std::endl;
+		fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
 		fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
 		fp << std::endl << std::endl;
 
-
 		/* Deallocate memory */
+
 		GKLS_free();
-	} /* for func_num*/
+
+	} /* for func_num */
 
 	std::cout << std::endl;
 
+	/* Benchmarking completed */
 	auto aend = sc.now();
 	auto atime_span = std::chrono::duration_cast<std::chrono::seconds>(aend - astart);
 
+	/* Output total search time */
 	fp << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
 	fp << "Maximum difference in this set: " << maxdiff << std::endl;
 	std::cout << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
+
+	/* Deallocate wrapper array */
+	delete[]xc;
 
 	/* Close files */
 	fp.close();
 
 
-	/* Deallocate the boundary vectors */
-	delete[]a; delete[]b;
+	/* Deallocate the boundary arrays */
+	delete[]a; delete[]b; delete[]x;
 	GKLS_domain_free();
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cin.get();
@@ -182,6 +218,7 @@ int main()
 
 
 /* Print an error message */
+/* From GKLS tutorial */
 void print_error_msg(int error_code)
 {
 	switch (error_code)
