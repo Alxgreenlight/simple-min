@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include "../solver/gridsolver.hpp"
 
 /* Including GKLS libraries, writen with C language */
@@ -38,7 +39,7 @@ int main()
 {
 	int error_code;    /* error codes variable */
 	int func_num;      /* test function number within a class     */
-	double maxdiff = DBL_MIN;	/* maximum error among all solutions */
+	double maxdiff = std::numeric_limits<double>::min();	/* maximum error among all solutions */
 	std::ofstream fp;	/* output file stream */
 	int nodes;	/* Number of nodes per dimension */
 	double eps;	/* required accuracy */
