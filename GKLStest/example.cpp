@@ -14,19 +14,22 @@ extern "C" {
 }
 
 
-double *a, *b, *x, *xc; /* sets the search area for task */
+double *a, *b, *x; /* sets the search area for task */
 
 void print_error_msg(int);	/* print error in GKLS */
 
 std::chrono::steady_clock sc; /* for runtime measurement */
 
 double func(const double* x) {	/* wrapper for function providing to solver */
+	double *xc;
+	xc = new double[GKLS_dim];
 	for (unsigned int i = 0; i < GKLS_dim; i++) {
 		xc[i] = x[i];
 	}
 	double r = GKLS_D_func(xc);
 					/* GKLS_ND_func; -- for ND-type test function */
 					/* GKLS_D2_func; -- for D2-type test function */
+	delete[]xc;
 	return r;
 }
 
@@ -89,7 +92,6 @@ int main()
 	a = new double[GKLS_dim];	/* For left bound of search region */
 	b = new double[GKLS_dim];	/* For right bound of search region */
 	x = new double[GKLS_dim];	/* For global minimum coordinates found */
-	xc = new double[GKLS_dim];	/* For internal using in wrapper function */
 
 
 	auto astart = sc.now(); /* start time for full set of tests */
@@ -199,9 +201,6 @@ int main()
 	fp << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
 	fp << "Maximum difference in this set: " << maxdiff << std::endl;
 	std::cout << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
-
-	/* Deallocate wrapper array */
-	delete[]xc;
 
 	/* Close files */
 	fp.close();
