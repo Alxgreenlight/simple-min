@@ -9,6 +9,9 @@
 #include <fstream>
 #include "../common/bbsolver.hpp"
 
+template <class T>
+class part;
+
 
 template <class T>
 class GridSolver : public BlackBoxSolver <T> {
@@ -333,6 +336,7 @@ protected:
 		double R;
 		T *step, *x, *Fvalues, *Frs, *Ls;
 		int *pts;
+                bool abort = false;
 		try {
 			step = new T[dim];
 			Frs = new T[np];
@@ -385,8 +389,13 @@ protected:
 				*Frp = Fr;
 				*LBp = L;
 				*dL = delta;
-				return;
+#pragma omp critical
+                                {
+                                    abort = true;
+                                }
+				
 			}
+                        if (!abort){
 #pragma omp for
 			for (int j = 0; j < allnodes; j++) {
 				int point = j;
@@ -403,9 +412,12 @@ protected:
 					pts[nt] = j;
 				}
 			}
-			delete[]x;
+                        }
+			if (x) delete[]x;
 		}
 
+
+                if (abort) return;
 		this->fevals += allnodes;
 
 #pragma omp parallel for shared(dim,allnodes,Fvalues)

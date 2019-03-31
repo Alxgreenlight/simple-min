@@ -160,7 +160,7 @@ int main()
 
 		/* check if errors during search occured */
 
-		gs.checkErrors(fp);
+		gs.checkErrors();
 
 		/* Number of function evaluations and algorithm iteartions during search */
 		unsigned long long int fevals;
