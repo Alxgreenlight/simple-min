@@ -62,8 +62,10 @@ public:
 
 		/* Add first hyperinterval */
 
+		part<T> pt(n, a, b);
+
 		try {
-			P.emplace_back(part<T>(n, a, b));
+			P.emplace_back(pt);
 		}
 		catch (std::exception& e) {
 			std::cerr << e.what() << std::endl;
@@ -107,7 +109,7 @@ public:
 			/* Choose which hyperintervals should be subdivided */
 			for (unsigned int i = 0; i < parts; i++) {
 				/* Subdivision criteria */
-				if (!((P[i].LocLO >(UPB - eps)) || (P[i].deltaL < eps))) {
+				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
 					/* If subdivide, choose dimension (the longest side) */
 					int choosen = ChooseDim(n, P[i].a, P[i].b);
 
@@ -124,15 +126,17 @@ public:
 					}
 					/* Add 2 new hyperintervals, parent HI no longer considered */
 					try {
-						P1.emplace_back(part<T>(n, P[i].a, b1));
+						pt.change(P[i].a, b1);
+						P1.emplace_back(pt);
 					}
-					catch(std::exception& e) {
+					catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
 						errcode = -2;
 						return UPB;
 					}
 					try {
-						P1.emplace_back(part<T>(n, a1, P[i].b));
+						pt.change(a1, P[i].b);
+						P1.emplace_back(pt);
 					}
 					catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
@@ -150,14 +154,14 @@ public:
 		return UPB;
 	}
 
-	/** 
+	/**
 	* Check if there are errors during search process
 	* @param fp - stream used to output error messages
 	*/
 	virtual void checkErrors() {
 		switch (errcode) {
 		case -1:
-		std::cerr << "Pointer to computing function (*compute) have not been initialized!" << std::endl;
+			std::cerr << "Pointer to computing function (*compute) have not been initialized!" << std::endl;
 			break;
 		case -2:
 			std::cerr << "Sorry, amount of RAM on your device insufficient to solve this task, please upgrade :)" << std::endl;
@@ -191,7 +195,7 @@ protected:
 	T UPB, LOB;		/* obtained upper bound and lower bound */
 
 	/* Get R (reliable coefficient) for the corresponding step lenght*/
-	virtual double getR(const T delta) { 
+	virtual double getR(const T delta) {
 		/* The value depends on step lenght (test formula, may be changed) */
 		return static_cast<double>(exp(delta));
 	}
@@ -335,8 +339,9 @@ protected:
 		T LB;
 		double R;
 		T *step, *x, *Fvalues, *Frs, *Ls;
+		x = nullptr;
 		int *pts;
-                bool abort = false;
+		bool abort = false;
 		try {
 			step = new T[dim];
 			Frs = new T[np];
@@ -351,7 +356,7 @@ protected:
 			*dL = delta;
 			return;
 		}
-		
+
 		for (int k = 0; k < np; k++) {
 			Frs[k] = std::numeric_limits<T>::max();
 			Ls[k] = std::numeric_limits<T>::min();
@@ -377,7 +382,7 @@ protected:
 			*dL = delta;
 			return;
 		}
-		
+
 #pragma omp parallel private(x) shared(dim, step, a, Fvalues)
 		{
 			try {
@@ -390,34 +395,34 @@ protected:
 				*LBp = L;
 				*dL = delta;
 #pragma omp critical
-                                {
-                                    abort = true;
-                                }
-				
+				{
+					abort = true;
+				}
+
 			}
-                        if (!abort){
+			if (!abort && x) {
 #pragma omp for
-			for (int j = 0; j < allnodes; j++) {
-				int point = j;
-				for (int k = dim - 1; k >= 0; k--) {
-					int t = point % this->nodes;
-					point = (int)(point / this->nodes);
-					x[k] = a[k] + t * step[k];
+				for (int j = 0; j < allnodes; j++) {
+					int point = j;
+					for (int k = dim - 1; k >= 0; k--) {
+						int t = point % this->nodes;
+						point = (int)(point / this->nodes);
+						x[k] = a[k] + t * step[k];
+					}
+					T rs = compute(x);
+					Fvalues[j] = rs;
+					int nt = omp_get_thread_num();
+					if (rs < Frs[nt]) {
+						Frs[nt] = rs;
+						pts[nt] = j;
+					}
 				}
-				T rs = compute(x);
-				Fvalues[j] = rs;
-				int nt = omp_get_thread_num();
-				if (rs < Frs[nt]) {
-					Frs[nt] = rs;
-					pts[nt] = j;
-				}
+				delete[]x;
 			}
-                        }
-			if (x) delete[]x;
 		}
 
 
-                if (abort) return;
+		if (abort) return;
 		this->fevals += allnodes;
 
 #pragma omp parallel for shared(dim,allnodes,Fvalues)
@@ -466,10 +471,10 @@ template <class T>
 class part {
 	int size;
 public:
-	T *a = nullptr;
+	T * a = nullptr;
 	T *b = nullptr;
 	T LocUP, LocLO, deltaL;
-	part(int n, const T* a, const T* b){
+	part(int n, const T* a, const T* b) {
 		try {
 			size = n;
 			this->a = new T[size];
@@ -507,6 +512,35 @@ public:
 		this->deltaL = p.deltaL;
 		this->LocLO = p.LocLO;
 		this->LocUP = p.LocUP;
+	}
+	part & operator=(const part & p) {
+		if (this->a) delete[]a;
+		if (this->b) delete[]b;
+		this->size = p.size;
+		try {
+			this->a = new T[this->size];
+			this->b = new T[this->size];
+		}
+		catch (std::bad_alloc e) {
+			throw e;
+			if (this->a) delete[]a;
+			if (this->b) delete[]b;
+			return *this;
+		}
+		for (int i = 0; i < this->size; i++) {
+			this->a[i] = p.a[i];
+			this->b[i] = p.b[i];
+		}
+		this->deltaL = p.deltaL;
+		this->LocLO = p.LocLO;
+		this->LocUP = p.LocUP;
+		return *this;
+	}
+	void change(const T*a, const T*b) {
+		for (int i = 0; i < this->size; i++) {
+			this->a[i] = a[i];
+			this->b[i] = b[i];
+		}
 	}
 	~part() {
 		if (a) delete[]a;
