@@ -5,9 +5,12 @@
 #include <algorithm>
 #include <limits>
 #include <omp.h>
-#include <vector>
 #include <fstream>
 #include "../common/bbsolver.hpp"
+
+/* forward definition of vector-analog, used in solver */
+template <class T>
+struct Partitions;
 
 
 template <class T>
@@ -45,10 +48,11 @@ public:
 		/* reset variables */
 		fevals = 0;
 		iters = 0;
+		int er;
 		/* create 2 vectors */
 		/* P contains parts (hyperintervals on which search must be performed */
 		/* P1 temporary */
-		std::vector<part<T>> P, P1;
+		Partitions<T> P(n), P1(n);
 		/* Upper bound */
 		UPB = std::numeric_limits<T>::max();
 		/* check if function pointer provided */
@@ -59,11 +63,8 @@ public:
 
 		/* Add first hyperinterval */
 
-		try {
-			P.emplace_back(part<T>(n, a, b));
-		}
-		catch (std::exception& e) {
-			std::cerr << e.what() << std::endl;
+		er = P.add(a, b);
+		if (er == -1) {
 			errcode = -2;
 			return UPB;
 		}
@@ -83,17 +84,16 @@ public:
 		}
 
 		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
-		while (!P.empty()) {
+		while (P.size != 0) {\
 			/* number of iterations on this step (BFS) */
-			unsigned int parts = P.size();
+			unsigned int parts = P.size;
 			iters += parts;
 
 			/* For all hyperintervals on this step perform grid search */
 			for (unsigned int i = 0; i < parts; i++) {
 				/* local values of upper and lower bounds, value of delta*L (Lipshitz const) */
 				T lUPB, lLOB, ldeltaL;
-				T* ta = P[i].a, *tb = P[i].b;
-				GridEvaluator(n, ta, tb, xs, &lUPB, &lLOB, &ldeltaL, f);
+				GridEvaluator(n, P[i].a, P[i].b, xs, &lUPB, &lLOB, &ldeltaL, f);
 				P[i].LocLO = lLOB;
 				P[i].LocUP = lUPB;
 				P[i].deltaL = ldeltaL;
@@ -120,19 +120,13 @@ public:
 						}
 					}
 					/* Add 2 new hyperintervals, parent HI no longer considered */
-					try {
-						P1.emplace_back(part<T>(n, P[i].a, b1));
-					}
-					catch(std::exception& e) {
-						std::cerr << e.what() << std::endl;
+					er = P1.add(P[i].a, b1);
+					if (er == -1) {
 						errcode = -2;
 						return UPB;
 					}
-					try {
-						P1.emplace_back(part<T>(n, a1, P[i].b));
-					}
-					catch (std::exception& e) {
-						std::cerr << e.what() << std::endl;
+					er = P1.add(a1, P[i].b);
+					if (er == -1) {
 						errcode = -2;
 						return UPB;
 					}
@@ -140,10 +134,10 @@ public:
 			}
 
 			P = P1;
-			P1.clear();
+			P1.erase();
 		}
 		delete[]a1; delete[]b1; delete[]xs;
-		P.clear();
+		P.erase();
 		return UPB;
 	}
 
@@ -229,9 +223,6 @@ protected:
 		catch (std::bad_alloc& ba) {
 			std::cerr << ba.what() << std::endl;
 			errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
 			return;
 		}
 
@@ -248,9 +239,6 @@ protected:
 		catch (std::bad_alloc& ba) {
 			std::cerr << ba.what() << std::endl;
 			errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
 			return;
 		}
 
@@ -325,11 +313,8 @@ protected:
 	/* number of available processors */
 	int np;
 
-	virtual void GridEvaluator(int dim, const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
-		T Fr = std::numeric_limits<T>::max();
-		T L = std::numeric_limits<T>::min();
-		T delta = std::numeric_limits<T>::min();
-		T LB;
+	void GridEvaluator(int dim, const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
+		T Fr = std::numeric_limits<T>::max(), L = std::numeric_limits<T>::min(), delta = std::numeric_limits<T>::min(), LB;
 		double R;
 		T *step, *x, *Fvalues, *Frs, *Ls;
 		int *pts;
@@ -342,9 +327,6 @@ protected:
 		catch (std::bad_alloc& ba) {
 			std::cerr << ba.what() << std::endl;
 			this->errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
 			return;
 		}
 		
@@ -368,25 +350,12 @@ protected:
 		catch (std::bad_alloc& ba) {
 			std::cerr << ba.what() << std::endl;
 			this->errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
 			return;
 		}
 		
 #pragma omp parallel private(x) shared(dim, step, a, Fvalues)
 		{
-			try {
-				x = new T[dim];
-			}
-			catch (std::bad_alloc& ba) {
-				std::cerr << ba.what() << std::endl;
-				this->errcode = -2;
-				*Frp = Fr;
-				*LBp = L;
-				*dL = delta;
-				return;
-			}
+			x = new T[dim];
 #pragma omp for
 			for (int j = 0; j < allnodes; j++) {
 				int point = j;
@@ -451,56 +420,106 @@ protected:
 
 /* hyperinterval info */
 template <class T>
-class part {
-	int size;
-public:
+struct part {
 	T *a = nullptr;
 	T *b = nullptr;
 	T LocUP, LocLO, deltaL;
-	part(int n, const T* a, const T* b){
-		try {
-			size = n;
-			this->a = new T[size];
-			this->b = new T[size];
-		}
-		catch (std::bad_alloc e) {
-			throw e;
-			if (this->a) delete[]this->a;
-			if (this->b) delete[]this->b;
-			return;
-		}
+};
+
+/* vator of part(s)*/
+
+template <class T>
+struct Partitions {
+
+	const int chunk = 16;
+	int size, dim;
+	int cur_alloc;
+	struct part<T>* base;
+
+	Partitions(int n) {
+		dim = n;
+		size = 0;
+		cur_alloc = 0;
+		base = nullptr;
+	}
+
+	~Partitions() {
 		for (int i = 0; i < size; i++) {
-			this->a[i] = a[i];
-			this->b[i] = b[i];
+			free(base[i].a);
+			free(base[i].b);
 		}
+		size = 0;
+		if (cur_alloc != 0)
+			free(base);
+		cur_alloc = 0;;
 	}
-	part(const part& p) {
-		if (this->a) delete[]a;
-		if (this->b) delete[]b;
-		this->size = p.size;
-		try {
-			this->a = new T[this->size];
-			this->b = new T[this->size];
+
+	void erase() {
+		for (int i = 0; i < size; i++) {
+			free(base[i].a);
+			free(base[i].b);
 		}
-		catch (std::bad_alloc e) {
-			throw e;
-			if (this->a) delete[]a;
-			if (this->b) delete[]b;
-			return;
-		}
-		for (int i = 0; i < this->size; i++) {
-			this->a[i] = p.a[i];
-			this->b[i] = p.b[i];
-		}
-		this->deltaL = p.deltaL;
-		this->LocLO = p.LocLO;
-		this->LocUP = p.LocUP;
+		size = 0;
+		if (cur_alloc != 0)
+			free(base);
+		cur_alloc = 0;
 	}
-	~part() {
-		if (a) delete[]a;
-		if (b) delete[]b;
+
+	int add(const T* toa, const T *tob) {
+		if (cur_alloc == 0) {
+			base = (struct part<T>*)malloc(chunk * sizeof(struct part<T>));
+			if (base) {
+				cur_alloc = chunk;
+			}
+			else {
+				std::cerr << "Error in allocation procedure" << std::endl;
+				erase();
+				return -1;
+			}
+		}
+		if (size == cur_alloc) {
+			base = (struct part<T>*)realloc(base, (cur_alloc + chunk) * sizeof(struct part<T>));
+			if (base) {
+				cur_alloc += chunk;
+			}
+			else {
+				std::cerr << "Error in allocation procedure" << std::endl;
+				erase();
+				return -1;
+			}
+		}
+
+		base[size].a = (double*)malloc(dim * sizeof(double));
+		base[size].b = (double*)malloc(dim * sizeof(double));
+		if ((!base[size].a) || (!base[size].b)) {
+			std::cerr << "Error in allocation procedure" << std::endl;
+			erase();
+			return -1;
+		}
+		for (int i = 0; i < dim; i++) {
+			base[size].a[i] = toa[i];
+			base[size].b[i] = tob[i];
+		}
+		size++;
+		return 0;
+	}
+
+	part<T> & operator[](int n) {
+		if (n > size - 1) {
+			std::cerr << "Out of size" << std::endl;
+		}
+		return base[n];
+	}
+
+	Partitions<T> & operator=(Partitions<T>& P) {
+		erase();
+		for (int i = 0; i < P.size; i++) {
+			add(P[i].a, P[i].b);
+		}
+		return (*this);
 	}
 };
+
 
 
 #endif /* GRIDSOLVER_HPP */
