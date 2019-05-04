@@ -1,3 +1,4 @@
+
 #ifndef GRIDSOLVER_HPP
 #define GRIDSOLVER_HPP
 
@@ -109,7 +110,7 @@ public:
 			/* Choose which hyperintervals should be subdivided */
 			for (unsigned int i = 0; i < parts; i++) {
 				/* Subdivision criteria */
-				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
+				if (P[i].LocLO < (UPB - eps)) {
 					/* If subdivide, choose dimension (the longest side) */
 					int choosen = ChooseDim(n, P[i].a, P[i].b);
 
@@ -146,8 +147,8 @@ public:
 				}
 			}
 
-			P = P1;
-			P1.clear();
+			P.clear();
+			P.swap(P1);
 		}
 		delete[]a1; delete[]b1; delete[]xs;
 		P.clear();
