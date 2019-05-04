@@ -42,7 +42,7 @@ int main()
 	std::ofstream fp;	/* output file stream */
 	double eps;	/* required accuracy */
 
-	fp.open("resEXPR.csv", std::ios::app);
+	fp.open("getEX.csv", std::ios::app);
 	if (!fp.is_open()) {
 		std::cerr << "Problem with file..." << std::endl;
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -59,43 +59,43 @@ int main()
 
 	/* Create a solver object */
 	GridSolverOMP<double> gs;
+	fp << "Параллельный вариант" << std::endl;
 
-	for (int dn = 2; dn < 6; dn++){
+	for (int dn = 2; dn < 6; dn++) {
 
-	GKLS_dim = dn;
-	GKLS_num_minima = 10;
-	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
-		return error_code;
-	GKLS_global_dist = 2.0 / 3.0;
-	GKLS_global_radius = 0.5*GKLS_global_dist;
-	GKLS_global_value = GKLS_GLOBAL_MIN_VALUE;
-	if ((error_code = GKLS_parameters_check()) != GKLS_OK)
-		return error_code;
+		GKLS_dim = dn;
+		GKLS_num_minima = 10;
+		if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
+			return error_code;
+		GKLS_global_dist = 2.0 / 3.0;
+		GKLS_global_radius = 0.5*GKLS_global_dist;
+		GKLS_global_value = GKLS_GLOBAL_MIN_VALUE;
+		if ((error_code = GKLS_parameters_check()) != GKLS_OK)
+			return error_code;
 
-	
-	int summary;
-	std::vector<int> allnodes;
 
-	/* Allocating required memory */
+		int summary;
+		std::vector<int> allnodes;
 
-	a = new double[GKLS_dim];	/* For left bound of search region */
-	b = new double[GKLS_dim];	/* For right bound of search region */
-	x = new double[GKLS_dim];	/* For global minimum coordinates found */
+		/* Allocating required memory */
 
-								/* Number of function evaluations and algorithm iteartions during search */
-	unsigned long long int fevs;
-	unsigned long int its;
-	int nod = 3;
+		a = new double[GKLS_dim];	/* For left bound of search region */
+		b = new double[GKLS_dim];	/* For right bound of search region */
+		x = new double[GKLS_dim];	/* For global minimum coordinates found */
 
-	/* Generate the class of 100 D-type functions */
-	while (nod < 10) {
-		gs.setparams(nod, eps);
+									/* Number of function evaluations and algorithm iteartions during search */
+		unsigned long long int fevs;
+		unsigned long int its;
+		int nod = 4;
+
+		/* Generate the class of 100 D-type functions */
+			gs.setparams(nod, eps);
 			fevs = 0;
 			its = 0;
 			printf("%d\n", nod);
 			summary = 0;
 			allnodes.clear();
-			auto astart = sc.now(); //start time for full set of tests
+			unsigned long long int time = 0;
 
 			for (func_num = 1; func_num <= 100; func_num++)
 			{
@@ -112,8 +112,11 @@ int main()
 				}
 
 				printf("\nGenerating the function number %d\n", func_num);
-
+				auto astart = sc.now(); //start time for full set of tests
 				double UPB = gs.search(GKLS_dim, x, a, b, func);
+				auto aend = sc.now();
+				auto atime_span = std::chrono::duration_cast<std::chrono::milliseconds>(aend - astart);
+				time += atime_span.count();
 				/* Number of function evaluations and algorithm iteartions during search */
 				unsigned long long int fevals;
 				unsigned long int iters;
@@ -126,7 +129,7 @@ int main()
 
 				/* check if errors during search occured */
 
-				gs.checkErrors(fp);
+				gs.checkErrors();
 
 				if ((1.0*fabs(GKLS_global_value - UPB)) > eps) {
 					summary++;
@@ -137,27 +140,25 @@ int main()
 				/* Deallocate memory */
 				GKLS_free();
 			} /* for func_num*/
-			auto aend = sc.now();
-			auto atime_span = std::chrono::duration_cast<std::chrono::milliseconds>(aend - astart);
+			
 
 			fp << nod << ';' << summary << ';';
 			for (int &d : allnodes) {
 				fp << d << ' ';
 			}
-			fp << ';' << atime_span.count();
+			fp << ";time = " << time;
+			fp << ";avg.time = " << static_cast<double>(time) / 100.0;
 			fp << ';' << static_cast<long double>(fevs) / 100.0;
 			fp << ';' << static_cast<long double>(its) / 100.0 << std::endl;
-		nod++;
+
+		std::cout << std::endl;
+
+
+		/* Close files */
+
+		delete[]a; delete[]b;
+		GKLS_domain_free();
 	}
-
-	std::cout << std::endl;
-
-
-	/* Close files */
-
-	delete[]a; delete[]b;
-	GKLS_domain_free();
-}
 	fp.close();
 
 
