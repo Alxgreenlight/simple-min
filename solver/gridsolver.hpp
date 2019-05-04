@@ -1,7 +1,7 @@
 #ifndef GRIDSOLVER_HPP
 #define GRIDSOLVER_HPP
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <limits>
 #include <omp.h>
@@ -156,7 +156,6 @@ public:
 
 	/**
 	* Check if there are errors during search process
-	* @param fp - stream used to output error messages
 	*/
 	virtual void checkErrors() {
 		switch (errcode) {
@@ -248,7 +247,7 @@ protected:
 		}
 		delta = delta * 0.5 * dim;
 		R = getR(delta);
-		int allnodes = static_cast<int>(pow(nodes, dim)), node;
+		int allnodes = static_cast<int>(pow(nodes, dim)), node = 0;
 		try {
 			Fvalues = new T[allnodes];
 		}
@@ -341,7 +340,6 @@ protected:
 		T *step, *x, *Fvalues, *Frs, *Ls;
 		x = nullptr;
 		int *pts;
-		bool abort = false;
 		try {
 			step = new T[dim];
 			Frs = new T[np];
@@ -385,22 +383,7 @@ protected:
 
 #pragma omp parallel private(x) shared(dim, step, a, Fvalues)
 		{
-			try {
 				x = new T[dim];
-			}
-			catch (std::bad_alloc& ba) {
-				std::cerr << ba.what() << std::endl;
-				this->errcode = -2;
-				*Frp = Fr;
-				*LBp = L;
-				*dL = delta;
-#pragma omp critical
-				{
-					abort = true;
-				}
-
-			}
-			if (!abort && x) {
 #pragma omp for
 				for (int j = 0; j < allnodes; j++) {
 					int point = j;
@@ -418,11 +401,8 @@ protected:
 					}
 				}
 				delete[]x;
-			}
 		}
 
-
-		if (abort) return;
 		this->fevals += allnodes;
 
 #pragma omp parallel for shared(dim,allnodes,Fvalues)
