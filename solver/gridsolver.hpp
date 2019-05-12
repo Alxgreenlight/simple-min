@@ -23,7 +23,14 @@ public:
 		errcode = 0;
 		eps = 100;
 		nodes = 2;
+		dim = 2;
 		param = false;
+	}
+
+	~GridSolver() {
+		if (step != nullptr) delete[]step;
+		if (x != nullptr) delete[]x;
+		if (Fvalues != nullptr) delete[]Fvalues;
 	}
 
 	/**
@@ -44,13 +51,29 @@ public:
 	* @param a,b left/right bounds of search region
 	* @param f pointer to function for which search minimum
 	*/
-	virtual T search(int n, T* x, const T * const a, const T * const b, const std::function<T(const T * const)> &f) {
+	virtual T search(int n, T* xfound, const T * const a, const T * const b, const std::function<T(const T * const)> &f) {
 		/* reset variables */
+		dim = n;
 		fevals = 0;
 		iters = 0;
+		allnodes = static_cast<int>(pow(nodes, dim));
 		/* create 2 vectors */
 		/* P contains parts (hyperintervals on which search must be performed */
 		/* P1 temporary */
+		try {
+			/* step of grid in every dimension */
+			if (step != nullptr) delete[]step;
+			if (x != nullptr) delete[]x;
+			if (Fvalues != nullptr) delete[]Fvalues;
+			step = new T[dim];
+			x = new T[dim];
+			Fvalues = new T[allnodes];
+		}
+		catch (std::bad_alloc& ba) {
+			std::cerr << ba.what() << std::endl;
+			errcode = -2;
+			return UPB;
+		}
 		std::vector<part<T>> P, P1;
 		/* Upper bound */
 		UPB = std::numeric_limits<T>::max();
@@ -62,7 +85,7 @@ public:
 
 		/* Add first hyperinterval */
 
-		part<T> pt(n, a, b);
+		part<T> pt(dim, a, b);
 
 		try {
 			P.emplace_back(pt);
@@ -77,9 +100,9 @@ public:
 		/* xs temporary array for storage local min coordinates */
 		T *a1, *b1, *xs;
 		try {
-			a1 = new T[n];
-			b1 = new T[n];
-			xs = new T[n];
+			a1 = new T[dim];
+			b1 = new T[dim];
+			xs = new T[dim];
 		}
 		catch (std::bad_alloc& ba) {
 			std::cerr << ba.what() << std::endl;
@@ -98,12 +121,12 @@ public:
 				/* local values of upper and lower bounds, value of delta*L (Lipshitz const) */
 				T lUPB, lLOB, ldeltaL;
 				T* ta = P[i].a, *tb = P[i].b;
-				GridEvaluator(n, ta, tb, xs, &lUPB, &lLOB, &ldeltaL, f);
+				GridEvaluator(ta, tb, xs, &lUPB, &lLOB, &ldeltaL, f);
 				P[i].LocLO = lLOB;
 				P[i].LocUP = lUPB;
 				P[i].deltaL = ldeltaL;
 				/* remember new results if less then previous */
-				UpdateRecords(lUPB, x, xs, n);
+				UpdateRecords(lUPB, xfound, xs);
 			}
 
 			/* Choose which hyperintervals should be subdivided */
@@ -111,10 +134,10 @@ public:
 				/* Subdivision criteria */
 				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
 					/* If subdivide, choose dimension (the longest side) */
-					int choosen = ChooseDim(n, P[i].a, P[i].b);
+					int choosen = ChooseDim(P[i].a, P[i].b);
 
 					/* Make new edges for 2 new hyperintervals */
-					for (int j = 0; j < n; j++) {
+					for (int j = 0; j < dim; j++) {
 						if (j != choosen) {			/* [a .. b1] [a1 .. b] */
 							a1[j] = P[i].a[j];		/* where a1 = [a[1], a[2], .. ,a[choosen] + b[choosen]/2, .. , a[dim] ] */
 							b1[j] = P[i].b[j];		/* and b1 = [b[1], b[2], .. ,a[choosen] + b[choosen]/2, .. , b[dim] ] */
@@ -189,9 +212,10 @@ protected:
 	unsigned long long fevals; /* number of function evaluations that search consumed */
 	unsigned long iters; /* nember of algorithm itaretions that search consumed */
 	T eps;	/* required accuracy */
-	int errcode, nodes;	/* internal varibale for handlig errors and number of nodes per dimension */
+	int errcode, nodes, dim, allnodes;	/* internal varibale for handlig errors and number of nodes per dimension */
 	bool param;		/* indicate if nodes and eps was initialized */
 	T UPB, LOB;		/* obtained upper bound and lower bound */
+	T *x = nullptr, *step = nullptr, *Fvalues = nullptr;
 
 	/* Get R (reliable coefficient) for the corresponding step lenght*/
 	virtual double getR(const T delta) {
@@ -200,17 +224,17 @@ protected:
 	}
 
 	/* Update the current record and its coordinates in accordance with new results obtained on some hyperinterval*/
-	virtual void UpdateRecords(const T LU, T* x, const T *xs, int n) {
+	virtual void UpdateRecords(const T LU, T* x, const T *xs) {
 		if (LU < UPB) {
 			UPB = LU;
-			for (int i = 0; i < n; i++) {
+			for (int i = 0; i < dim; i++) {
 				x[i] = xs[i];
 			}
 		}
 	}
 
 	/* Select dimension for subdivide hyperinteral (choose the longest side) */
-	virtual int ChooseDim(int dim, const T *a, const T *b) {
+	virtual int ChooseDim(const T *a, const T *b) {
 		T max = std::numeric_limits<T>::min(), cr;
 		int i, maxI = 0;
 		for (i = 0; i < dim; i++) {
@@ -223,43 +247,16 @@ protected:
 		return maxI;
 	}
 
-	virtual void GridEvaluator(int dim, const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
+	virtual void GridEvaluator(const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
 		T Fr = std::numeric_limits<T>::max(), L = std::numeric_limits<T>::min(), delta = std::numeric_limits<T>::min(), LB;
 		double R;
-		T *step, *x, *Fvalues;
-		try {
-			/* step of grid in every dimension */
-			step = new T[dim];
-			x = new T[dim];
-		}
-		catch (std::bad_alloc& ba) {
-			std::cerr << ba.what() << std::endl;
-			errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
-			return;
-		}
-
 		for (int i = 0; i < dim; i++) {
 			step[i] = fabs(b[i] - a[i]) / (nodes - 1);
 			delta = step[i] > delta ? step[i] : delta;
 		}
 		delta = delta * 0.5 * dim;
 		R = getR(delta);
-		int allnodes = static_cast<int>(pow(nodes, dim)), node = 0;
-		try {
-			Fvalues = new T[allnodes];
-		}
-		catch (std::bad_alloc& ba) {
-			std::cerr << ba.what() << std::endl;
-			errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
-			return;
-		}
-
+		int node = 0;
 		/* Calculate and cache the value of the function in all points of the grid */
 		for (int j = 0; j < allnodes; j++) {
 			int point = j;
@@ -305,8 +302,6 @@ protected:
 		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;
-		delete[]step; delete[]x;
-		delete[]Fvalues;
 		*Frp = Fr;
 		*LBp = LB;
 	}
@@ -324,96 +319,76 @@ public:
 		np = omp_get_num_procs();
 		omp_set_dynamic(0);
 		omp_set_num_threads(np);
+		Frs = new T[np];
+		Ls = new T[np];
+		pts = new int[np];
+		xp = new T[np * this->dim];
 	}
+
+	~GridSolverOMP() {
+		if (Frs != nullptr) delete[]Frs;
+		if (Ls != nullptr) delete[]Ls;
+		if (pts != nullptr) delete[]pts;
+		if (xp != nullptr) delete[]xp;
+	}
+
 
 protected:
 
 	/* number of available processors */
 	int np;
+	T *Frs = nullptr, *Ls = nullptr, *xp = nullptr;
+	int *pts = nullptr;
 
-	virtual void GridEvaluator(int dim, const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
+	virtual void GridEvaluator(const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
 		T Fr = std::numeric_limits<T>::max();
 		T L = std::numeric_limits<T>::min();
 		T delta = std::numeric_limits<T>::min();
 		T LB;
 		double R;
-		T *step, *x, *Fvalues, *Frs, *Ls;
-		x = nullptr;
-		int *pts;
-		try {
-			step = new T[dim];
-			Frs = new T[np];
-			Ls = new T[np];
-			pts = new int[np];
-		}
-		catch (std::bad_alloc& ba) {
-			std::cerr << ba.what() << std::endl;
-			this->errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
-			return;
-		}
+		int node;
 
 		for (int k = 0; k < np; k++) {
 			Frs[k] = std::numeric_limits<T>::max();
 			Ls[k] = std::numeric_limits<T>::min();
 		}
 
-		for (int i = 0; i < dim; i++) {
-			step[i] = fabs(b[i] - a[i]) / (this->nodes - 1);
-			delta = step[i] > delta ? step[i] : delta;
+		for (int i = 0; i < this->dim; i++) {
+			this->step[i] = fabs(b[i] - a[i]) / (this->nodes - 1);
+			delta = this->step[i] > delta ? this->step[i] : delta;
 		}
 
-		delta = delta * 0.5 * dim;
+		delta = delta * 0.5 * this->dim;
 		R = this->getR(delta);
-		int allnodes = static_cast<int>(pow(this->nodes, dim));
-		int node;
-		try {
-			Fvalues = new T[allnodes];
-		}
-		catch (std::bad_alloc& ba) {
-			std::cerr << ba.what() << std::endl;
-			this->errcode = -2;
-			*Frp = Fr;
-			*LBp = L;
-			*dL = delta;
-			return;
-		}
 
-#pragma omp parallel private(x) shared(dim, step, a, Fvalues)
-		{
-				x = new T[dim];
-#pragma omp for
-				for (int j = 0; j < allnodes; j++) {
+#pragma omp parallel for
+				for (int j = 0; j < this->allnodes; j++) {
+					int nt = omp_get_thread_num();
 					int point = j;
-					for (int k = dim - 1; k >= 0; k--) {
+					for (int k = this->dim - 1; k >= 0; k--) {
 						int t = point % this->nodes;
 						point = (int)(point / this->nodes);
-						x[k] = a[k] + t * step[k];
+						xp[this->dim*nt+k] = a[k] + t * this->step[k];
 					}
-					T rs = compute(x);
-					Fvalues[j] = rs;
-					int nt = omp_get_thread_num();
+					T rs = compute((xp+this->dim*nt));
+					this->Fvalues[j] = rs;
 					if (rs < Frs[nt]) {
 						Frs[nt] = rs;
 						pts[nt] = j;
 					}
 				}
-				delete[]x;
-		}
 
-		this->fevals += allnodes;
+		this->fevals += this->allnodes;
 
-#pragma omp parallel for shared(dim,allnodes,Fvalues)
-		for (int j = 0; j < allnodes; j++) {
+#pragma omp parallel for
+		for (int j = 0; j < this->allnodes; j++) {
 			int neighbour;
 			T loc = std::numeric_limits<T>::min();
-			for (int k = 0; k < dim; k++) {
+			for (int k = 0; k < this->dim; k++) {
 				int board = (int)pow(this->nodes, k + 1);
 				neighbour = j + board / this->nodes;
-				if ((neighbour < allnodes) && ((j / board) == (neighbour / board))) {
-					loc = static_cast<T>(fabs(Fvalues[j] - Fvalues[neighbour])) / step[dim - 1 - k];
+				if ((neighbour < this->allnodes) && ((j / board) == (neighbour / board))) {
+					loc = static_cast<T>(fabs(this->Fvalues[j] - this->Fvalues[neighbour])) / this->step[this->dim - 1 - k];
 				}
 				int nt = omp_get_thread_num();
 				if (loc > Ls[nt]) {
@@ -428,18 +403,15 @@ protected:
 			}
 			L = Ls[k] > L ? Ls[k] : L;
 		}
-		for (int k = dim - 1; k >= 0; k--) {
+		for (int k = this->dim - 1; k >= 0; k--) {
 			int t = node % this->nodes;
 			node = (int)(node / this->nodes);
-			xfound[k] = a[k] + t * step[k];
+			xfound[k] = a[k] + t * this->step[k];
 		}
 		/* final calculation */
 		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;
-		delete[]step;
-		delete[]Fvalues;
-		delete[]pts; delete[]Frs; delete[]Ls;
 		*Frp = Fr;
 		*LBp = LB;
 	}
