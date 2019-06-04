@@ -363,21 +363,21 @@ protected:
 		R = this->getR(delta);
 
 #pragma omp parallel for
-				for (int j = 0; j < this->allnodes; j++) {
-					int nt = omp_get_thread_num();
-					int point = j;
-					for (int k = this->dim - 1; k >= 0; k--) {
-						int t = point % this->nodes;
-						point = (int)(point / this->nodes);
-						xp[this->dim*nt+k] = a[k] + t * this->step[k];
-					}
-					T rs = compute((xp+this->dim*nt));
-					this->Fvalues[j] = rs;
-					if (rs < Frs[nt]) {
-						Frs[nt] = rs;
-						pts[nt] = j;
-					}
-				}
+		for (int j = 0; j < this->allnodes; j++) {
+			int nt = omp_get_thread_num();
+			int point = j;
+			for (int k = this->dim - 1; k >= 0; k--) {
+				int t = point % this->nodes;
+				point = (int)(point / this->nodes);
+				xp[this->dim*nt + k] = a[k] + t * this->step[k];
+			}
+			T rs = compute((xp + this->dim*nt));
+			this->Fvalues[j] = rs;
+			if (rs < Frs[nt]) {
+				Frs[nt] = rs;
+				pts[nt] = j;
+			}
+		}
 
 		this->fevals += this->allnodes;
 
@@ -497,6 +497,10 @@ public:
 			return this->UPB;
 		}
 
+		for (int i = 0; i < np; i++) {
+			UPBs[i] = std::numeric_limits<double>::max();
+		}
+
 		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
 		while (!P.empty()) {
 			/* number of iterations on this step (BFS) */
@@ -611,7 +615,7 @@ protected:
 			}
 		}
 
-		#pragma omp atomic update
+		#pragma omp atomic
 		this->fevals += this->allnodes;
 
 		/* Calculate coordinates of obtained upper bound */
