@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-c -std=c++11 -fopenmp
+CXXFLAGS=-c -std=c++11 -fopenmp -Wall
 CC=gcc
 CCFLAGS=-c
 

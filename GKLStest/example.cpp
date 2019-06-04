@@ -45,7 +45,7 @@ int main()
 	double eps;	/* required accuracy */
 
 	/* Set parameters of GKLS */
-	GKLS_dim = 5;
+	GKLS_dim = 3;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
@@ -56,7 +56,7 @@ int main()
 		return error_code;
 
 	/* Create a solver object */
-	GridSolverHLP<double> gs;
+	GridSolverOMP<double> gs;
 
 	/* Try to open output file */
 	fp.open("results.txt", std::ios::out);
@@ -196,7 +196,7 @@ int main()
 
 	/* Benchmarking completed */
 	auto aend = sc.now();
-	auto atime_span = std::chrono::duration_cast<std::chrono::seconds>(aend - astart);
+	auto atime_span = std::chrono::duration_cast<std::chrono::milliseconds>(aend - astart);
 
 	/* Output total search time */
 	fp << "Total evaluation time: " << atime_span.count() << 's' << std::endl;
@@ -206,9 +206,24 @@ int main()
 	/* Close files */
 	fp.close();
 
+	FILE *out = nullptr;
+	out = fopen("complete.txt", "at");
+	if (out == nullptr) {
+		std::cerr << "Problem with file..." << std::endl;
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cin.get();
+		return -1;
+	}
+	fprintf(out,"Dim = %d\n", GKLS_dim); 
+	fprintf(out,"Total evaluation time: %d ms\n",static_cast<int>(atime_span.count()));
+ 	fprintf(out,"Maximum difference in this set: %lf\n", maxdiff);
+	fclose(out);
+
 
 	/* Deallocate the boundary arrays */
 	delete[]a; delete[]b; delete[]x;
+std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+	std::cin.get();
 	GKLS_domain_free();
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cin.get();
