@@ -1,3 +1,4 @@
+
 #ifndef GRIDSOLVER_HPP
 #define GRIDSOLVER_HPP
 
@@ -7,7 +8,6 @@
 #include <omp.h>
 #include <vector>
 #include <fstream>
-#include <iostream>
 #include "../common/bbsolver.hpp"
 
 template <class T>
@@ -54,9 +54,6 @@ public:
 	*/
 	virtual T search(int n, T* xfound, const T * const a, const T * const b, const std::function<T(const T * const)> &f) {
 		/* reset variables */
-		int np = omp_get_num_procs();
-		omp_set_dynamic(0);
-		omp_set_num_threads(np);
 		dim = n;
 		fevals = 0;
 		iters = 0;
@@ -102,22 +99,18 @@ public:
 
 		/* If hyperinterval divides, 2 new hyperintervals with bounds [a..b1] [a1..b] creates */
 		/* xs temporary array for storage local min coordinates */
-		T *a1, *b1, *xs, *upbs, *xns;
+		T *a1, *b1, *xs;
 		try {
 			a1 = new T[dim];
 			b1 = new T[dim];
-			xs = new T[dim*np];
-			xns = new T[dim*np];
-			upbs = new T[np];
+			xs = new T[dim];
 		}
 		catch (std::bad_alloc& ba) {
 			std::cerr << ba.what() << std::endl;
 			errcode = -2;
 			return UPB;
 		}
-		for (int i = 0; i < np; i++) {
-			upbs[i] = std::numeric_limits<T>::max();
-		}
+
 		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
 		while (!P.empty()) {
 			/* number of iterations on this step (BFS) */
@@ -125,38 +118,22 @@ public:
 			iters += parts;
 
 			/* For all hyperintervals on this step perform grid search */
-#pragma omp parallel for
-			for (int i = 0; i < static_cast<int>(parts); i++) {
+			for (unsigned int i = 0; i < parts; i++) {
 				/* local values of upper and lower bounds, value of delta*L (Lipshitz const) */
-				int nt = omp_get_thread_num();
 				T lUPB, lLOB, ldeltaL;
 				T* ta = P[i].a, *tb = P[i].b;
-				GridEvaluator(ta, tb, xs+dim*nt, &lUPB, &lLOB, &ldeltaL, f);
-#pragma omp critical
-				{
-					//printf("Iteration %d of %u, current record is %.3lf\n",i,parts,UPB);
-					P[i].LocLO = lLOB;
-					P[i].LocUP = lUPB;
-					P[i].deltaL = ldeltaL;
-					//std::cin.get();
-				}
+				GridEvaluator(ta, tb, xs, &lUPB, &lLOB, &ldeltaL, f);
+				P[i].LocLO = lLOB;
+				P[i].LocUP = lUPB;
+				P[i].deltaL = ldeltaL;
 				/* remember new results if less then previous */
-				UpdateRecordsP(lUPB, xns+dim*nt, xs+dim*nt, upbs[nt]);
-			}
-			
-			for (int i = 0; i < np; i++) {
-				if (upbs[i] < UPB) {
-					UPB = upbs[i];
-					for (int j = 0; j < dim; j++) {
-						xfound[j] = (xns+dim*i)[j];
-					}
-				}
+				UpdateRecords(lUPB, xfound, xs);
 			}
 
 			/* Choose which hyperintervals should be subdivided */
 			for (unsigned int i = 0; i < parts; i++) {
 				/* Subdivision criteria */
-				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
+				if (P[i].LocLO < (UPB - eps)) {
 					/* If subdivide, choose dimension (the longest side) */
 					int choosen = ChooseDim(P[i].a, P[i].b);
 
@@ -193,11 +170,10 @@ public:
 				}
 			}
 
-			P = P1;
-			P1.clear();
+			P.clear();
+			P.swap(P1);
 		}
 		delete[]a1; delete[]b1; delete[]xs;
-		delete[]xns; delete[]upbs;
 		P.clear();
 		return UPB;
 	}
@@ -252,15 +228,6 @@ protected:
 	virtual void UpdateRecords(const T LU, T* x, const T *xs) {
 		if (LU < UPB) {
 			UPB = LU;
-			for (int i = 0; i < dim; i++) {
-				x[i] = xs[i];
-			}
-		}
-	}
-
-	virtual void UpdateRecordsP(const T LU, T* x, const T *xs, T & upb) {
-		if (LU < upb) {
-			upb = LU;
 			for (int i = 0; i < dim; i++) {
 				x[i] = xs[i];
 			}
@@ -443,6 +410,233 @@ protected:
 			xfound[k] = a[k] + t * this->step[k];
 		}
 		/* final calculation */
+		LB = R * L * delta;
+		*dL = LB;
+		LB = Fr - LB;
+		*Frp = Fr;
+		*LBp = LB;
+	}
+
+};
+
+template <class T> class GridSolverHLP : public GridSolver <T> {
+public:
+
+	/**
+	* Constructor
+	*/
+	GridSolverHLP() {
+		np = omp_get_num_procs();
+		//prevent memory overconsuming
+		//if (np > 8) np = 8;
+		omp_set_dynamic(0);
+		omp_set_num_threads(np);
+	}
+
+	~GridSolverHLP() {
+	}
+
+	virtual T search(int n, T* xfound, const T * const a, const T * const b, const std::function<T(const T * const)> &f) {
+		/* reset variables */
+		this->dim = n;
+		this->fevals = 0;
+		this->iters = 0;
+		this->allnodes = static_cast<int>(pow(this->nodes, this->dim));
+		/* create 2 vectors */
+		/* P contains parts (hyperintervals on which search must be performed */
+		/* P1 temporary */
+		try {
+			/* step of grid in every dimension */
+			if (this->step != nullptr) delete[]this->step;
+			if (this->x != nullptr) delete[]this->x;
+			if (this->Fvalues != nullptr) delete[]this->Fvalues;
+			this->step = new T[np*this->dim];
+			this->x = new T[np*this->dim];
+			this->Fvalues = new T[np*this->allnodes];
+		}
+		catch (std::bad_alloc& ba) {
+			std::cerr << ba.what() << std::endl;
+			this->errcode = -2;
+			return this->UPB;
+		}
+		std::vector<part<T>> P, P1;
+		/* Upper bound */
+		this->UPB = std::numeric_limits<T>::max();
+		/* check if function pointer provided */
+		if (f == nullptr) {
+			this->errcode = -1;
+			return this->UPB;
+		}
+
+		/* Add first hyperinterval */
+
+		part<T> pt(this->dim, a, b);
+
+		try {
+			P.emplace_back(pt);
+		}
+		catch (std::exception& e) {
+			std::cerr << e.what() << std::endl;
+			this->errcode = -2;
+			return this->UPB;
+		}
+
+		/* If hyperinterval divides, 2 new hyperintervals with bounds [a..b1] [a1..b] creates */
+		/* xs temporary array for storage local min coordinates */
+		T *a1, *b1, *xs, *UPBs, *xns;
+		try {
+			a1 = new T[this->dim];
+			b1 = new T[this->dim];
+			xs = new T[np*this->dim];
+			UPBs = new T[np];
+			xns = new T[np*this->dim];
+		}
+		catch (std::bad_alloc& ba) {
+			std::cerr << ba.what() << std::endl;
+			this->errcode = -2;
+			return this->UPB;
+		}
+
+		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
+		while (!P.empty()) {
+			/* number of iterations on this step (BFS) */
+			unsigned int parts = P.size();
+			this->iters += parts;
+
+			/* For all hyperintervals on this step perform grid search */
+        #pragma omp parallel for
+			for (int i = 0; i < static_cast<int>(parts); i++) {
+				/* local values of upper and lower bounds, value of delta*L (Lipshitz const) */
+				int nt = omp_get_thread_num();
+				T lUPB, lLOB, ldeltaL;
+				T* ta = P[i].a, *tb = P[i].b;
+				GridEvaluator(ta, tb, xs+this->dim*nt, &lUPB, &lLOB, &ldeltaL, f, this->step+this->dim*nt, this->x+this->dim*nt, this->Fvalues+this->allnodes*nt);
+				P[i].LocLO = lLOB;
+				P[i].LocUP = lUPB;
+				P[i].deltaL = ldeltaL;
+				/* remember new results if less then previous */
+				UpdateRecordsP(lUPB, UPBs[nt], xs+this->dim*nt, xns+this->dim*nt);
+			}
+
+			for (int j = 0; j < np; j++){
+                this->UpdateRecords(UPBs[j],xfound,xns+j*this->dim);
+			}
+
+			/* Choose which hyperintervals should be subdivided */
+			for (unsigned int i = 0; i < parts; i++) {
+				/* Subdivision criteria */
+				if (P[i].LocLO < (this->UPB - this->eps)) {
+					/* If subdivide, choose dimension (the longest side) */
+					int choosen = this->ChooseDim(P[i].a, P[i].b);
+
+					/* Make new edges for 2 new hyperintervals */
+					for (int j = 0; j < this->dim; j++) {
+						if (j != choosen) {			/* [a .. b1] [a1 .. b] */
+							a1[j] = P[i].a[j];		/* where a1 = [a[1], a[2], .. ,a[choosen] + b[choosen]/2, .. , a[dim] ] */
+							b1[j] = P[i].b[j];		/* and b1 = [b[1], b[2], .. ,a[choosen] + b[choosen]/2, .. , b[dim] ] */
+						}
+						else {
+							a1[j] = P[i].a[j] + fabs(P[i].b[j] - P[i].a[j]) / 2.0;
+							b1[j] = a1[j];
+						}
+					}
+					/* Add 2 new hyperintervals, parent HI no longer considered */
+					try {
+						pt.change(P[i].a, b1);
+						P1.emplace_back(pt);
+					}
+					catch (std::exception& e) {
+						std::cerr << e.what() << std::endl;
+						this->errcode = -2;
+						return this->UPB;
+					}
+					try {
+						pt.change(a1, P[i].b);
+						P1.emplace_back(pt);
+					}
+					catch (std::exception& e) {
+						std::cerr << e.what() << std::endl;
+						this->errcode = -2;
+						return this->UPB;
+					}
+				}
+			}
+
+			P.clear();
+			P.swap(P1);
+		}
+		delete[]a1; delete[]b1; delete[]xs; delete[]UPBs; delete[]xns;
+		P.clear(); P1.clear();
+		return this->UPB;
+	}
+
+protected:
+
+	/* number of available processors */
+	int np;
+
+	virtual void UpdateRecordsP(const T UP, T & UPBs, const T * XS, T * XNS){
+        if (UP < UPBs){
+            UPBs = UP;
+            for (int i = 0; i < this->dim; i++){
+                XNS[i] = XS[i];
+            }
+        }
+	}
+
+	virtual void GridEvaluator(const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute, T* nstep, T* xc, T* nFvalues) {
+		T Fr = std::numeric_limits<T>::max(), L = std::numeric_limits<T>::min(), delta = std::numeric_limits<T>::min(), LB;
+		double R;
+		for (int i = 0; i < this->dim; i++) {
+			nstep[i] = fabs(b[i] - a[i]) / (this->nodes - 1);
+			delta = nstep[i] > delta ? nstep[i] : delta;
+		}
+		delta = delta * 0.5 * this->dim;
+		R = this->getR(delta);
+		int node = 0;
+		/* Calculate and cache the value of the function in all points of the grid */
+		for (int j = 0; j < this->allnodes; j++) {
+			int point = j;
+			for (int k = this->dim - 1; k >= 0; k--) {
+				int t = point % this->nodes;
+				point = (int)(point / this->nodes);
+				xc[k] = a[k] + t * nstep[k];
+			}
+			T rs = compute(xc);
+			nFvalues[j] = rs;
+			/* also remember minimum value across the grid */
+			if (rs < Fr) {
+				Fr = rs;
+				node = j;
+			}
+		}
+
+		#pragma omp atomic update
+		this->fevals += this->allnodes;
+
+		/* Calculate coordinates of obtained upper bound */
+
+		for (int k = this->dim - 1; k >= 0; k--) {
+			int t = node % this->nodes;
+			node = (int)(node / this->nodes);
+			xfound[k] = a[k] + t * nstep[k];
+		}
+
+		/* Calculate all estimations of Lipshitz constant and choose maximum estimation */
+		for (int j = 0; j < this->allnodes; j++) {
+			int neighbour;
+			for (int k = 0; k < this->dim; k++) {
+				int board = (int)pow(this->nodes, k + 1);
+				neighbour = j + board / this->nodes;
+				if ((neighbour < this->allnodes) && ((j / board) == (neighbour / board))) {
+					T loc = fabs(nFvalues[j] - nFvalues[neighbour]) / nstep[this->dim - 1 - k];
+					L = loc > L ? loc : L;
+				}
+			}
+		}
+
+		/* final calculation */
+
 		LB = R * L * delta;
 		*dL = LB;
 		LB = Fr - LB;

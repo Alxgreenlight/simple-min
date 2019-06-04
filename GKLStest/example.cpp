@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
-#include "../solver/gridsolver.hpp"
+#include "../solver/gridsolver_hlp.hpp"
 
 /* Including GKLS libraries, writen with C language */
 
@@ -45,7 +45,7 @@ int main()
 	double eps;	/* required accuracy */
 
 	/* Set parameters of GKLS */
-	GKLS_dim = 2;
+	GKLS_dim = 5;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
@@ -56,7 +56,7 @@ int main()
 		return error_code;
 
 	/* Create a solver object */
-	GridSolverOMP<double> gs;
+	GridSolverHLP<double> gs;
 
 	/* Try to open output file */
 	fp.open("results.txt", std::ios::out);
