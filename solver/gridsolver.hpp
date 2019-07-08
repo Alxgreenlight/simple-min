@@ -1,4 +1,3 @@
-
 #ifndef GRIDSOLVER_HPP
 #define GRIDSOLVER_HPP
 
@@ -133,7 +132,7 @@ public:
 			/* Choose which hyperintervals should be subdivided */
 			for (unsigned int i = 0; i < parts; i++) {
 				/* Subdivision criteria */
-				if (P[i].LocLO < (UPB - eps)) {
+				if (!((P[i].LocLO > (UPB - eps)) || (P[i].deltaL < eps))) {
 					/* If subdivide, choose dimension (the longest side) */
 					int choosen = ChooseDim(P[i].a, P[i].b);
 
@@ -170,8 +169,8 @@ public:
 				}
 			}
 
-			P.clear();
-			P.swap(P1);
+			P = P1;
+			P1.clear();
 		}
 		delete[]a1; delete[]b1; delete[]xs;
 		P.clear();
@@ -323,7 +322,6 @@ public:
 		Frs = new T[np];
 		Ls = new T[np];
 		pts = new int[np];
-		xp = new T[np * this->dim];
 	}
 
 	~GridSolverOMP() {
@@ -337,11 +335,20 @@ public:
 protected:
 
 	/* number of available processors */
-	int np;
+	int np, xpp;
 	T *Frs = nullptr, *Ls = nullptr, *xp = nullptr;
 	int *pts = nullptr;
 
 	virtual void GridEvaluator(const T *a, const T *b, T* xfound, T *Frp, T *LBp, T *dL, const std::function<T(const T * const)> &compute) {
+		if (xp == nullptr) {
+			xp = new T[np*this->dim];
+			xpp = this->dim;
+		}
+		if (xpp != this->dim) {
+			if (xp != nullptr) delete[]xp;
+			xp = new T[np*this->dim];
+			xpp = this->dim;
+		}
 		T Fr = std::numeric_limits<T>::max();
 		T L = std::numeric_limits<T>::min();
 		T delta = std::numeric_limits<T>::min();
