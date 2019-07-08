@@ -15,7 +15,8 @@ extern "C" {
 }
 
 
-double *a, *b, *x; /* sets the search area for task */
+double *a, *b, *x; /* sets the search area for task
+x is used for saving coordinates of solve*/
 
 void print_error_msg(int);	/* print error in GKLS */
 
@@ -27,12 +28,17 @@ double func(const double* x) {	/* wrapper for function providing to solver */
 	for (unsigned int i = 0; i < GKLS_dim; i++) {
 		xc[i] = x[i];
 	}
-	double r = GKLS_D_func(xc);
+	double r = GKLS_D_func(xc);	/* returns a function value in a point with coordinates provided in x[] */
 					/* GKLS_ND_func; -- for ND-type test function */
 					/* GKLS_D2_func; -- for D2-type test function */
 	delete[]xc;
 	return r;
 }
+
+/* why so terrible wrapper with memory allocation in every call?
+method requires function with const double pointer
+but GKLS works only with non-const pointers */
+/* It can be fixed in GKLS code, but tests weren't show any acceleration, it's strange */
 
 
 int main()
@@ -45,7 +51,7 @@ int main()
 	double eps;	/* required accuracy */
 
 	/* Set parameters of GKLS */
-	GKLS_dim = 3;
+	GKLS_dim = 4;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
@@ -56,7 +62,9 @@ int main()
 		return error_code;
 
 	/* Create a solver object */
-	GridSolverOMP<double> gs;
+	//Gridsolver<double> gs; //serial
+	GridSolverOMP<double> gs; //parallel grid computing
+	//GridSolverHLP<double> gs; //parallel branch and bound method
 
 	/* Try to open output file */
 	fp.open("results.txt", std::ios::out);
@@ -68,6 +76,7 @@ int main()
 	}
 
 	/* Set parametrs of method */
+	/* Interactive */
 
 	std::cout << "Set number of nodes per dimension" << std::endl << \
 		"It can significantly affect on performance!" << std::endl;
@@ -206,27 +215,11 @@ int main()
 	/* Close files */
 	fp.close();
 
-	FILE *out = nullptr;
-	out = fopen("complete.txt", "at");
-	if (out == nullptr) {
-		std::cerr << "Problem with file..." << std::endl;
-		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-		std::cin.get();
-		return -1;
-	}
-	fprintf(out,"Dim = %d\n", GKLS_dim); 
-	fprintf(out,"Total evaluation time: %d ms\n",static_cast<int>(atime_span.count()));
- 	fprintf(out,"Maximum difference in this set: %lf\n", maxdiff);
-	fclose(out);
-
-
 	/* Deallocate the boundary arrays */
 	delete[]a; delete[]b; delete[]x;
-std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::cin.get();
-	GKLS_domain_free();
 	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 	std::cin.get();
+	GKLS_domain_free();
 	return 0;
 
 }

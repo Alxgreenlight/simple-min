@@ -53,7 +53,7 @@ int main()
 	gs.setparams(nodes, eps);
 	std::ofstream fp;
 	fp.open("paralleltest.txt", std::ios::out);
-	for (int G = 2; G < 7; G++) {
+	for (int G = 2; G < 5; G++) {
 		N = G;
 		std::cout << "Starting for " << G << " cluster" << std::endl;
 		double *a = new double[m * N];
