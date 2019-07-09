@@ -42,6 +42,7 @@ int main()
 	std::ofstream fp;	/* output file stream */
 	double eps;	/* required accuracy */
 
+	/* file with results of experiment */
 	fp.open("getEX.csv", std::ios::app);
 	if (!fp.is_open()) {
 		std::cerr << "Problem with file..." << std::endl;
@@ -50,6 +51,8 @@ int main()
 		return -1;
 	}
 
+	/* Set accuracy in interactive way */
+	/* Using default the best efficient nodes per dimension = 4 */
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
 	std::cin >> eps;
 	while (std::cin.fail()) {
@@ -58,11 +61,16 @@ int main()
 	}
 
 	/* Create a solver object */
+	//GridSolver<double> gs;
 	GridSolverOMP<double> gs;
-	fp << "Параллельный вариант" << std::endl;
+	//GridSolverHLP<double> gs;
+	fp << "Parallel search" << std::endl;
 
+
+	/* full GKLS (100 funcs in each) tests with varying dimensionality */
 	for (int dn = 2; dn < 6; dn++) {
 
+		/* GKLS initialization */
 		GKLS_dim = dn;
 		GKLS_num_minima = 10;
 		if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
@@ -74,8 +82,8 @@ int main()
 			return error_code;
 
 
-		int summary;
-		std::vector<int> allnodes;
+		int summary; //Amount of funcs with wrong answer
+		std::vector<int> allnodes; //Numbers of funcs for which wrong answers obtained
 
 		/* Allocating required memory */
 
@@ -83,12 +91,13 @@ int main()
 		b = new double[GKLS_dim];	/* For right bound of search region */
 		x = new double[GKLS_dim];	/* For global minimum coordinates found */
 
-									/* Number of function evaluations and algorithm iteartions during search */
+			/* Number of function evaluations and algorithm iteartions during search */
 		unsigned long long int fevs;
 		unsigned long int its;
-		int nod = 4;
+		int nod = 4; /* Number of nodes per dimension */
 
 		/* Generate the class of 100 D-type functions */
+			/* provide settings to solver */
 			gs.setparams(nod, eps);
 			fevs = 0;
 			its = 0;
@@ -97,6 +106,7 @@ int main()
 			allnodes.clear();
 			unsigned long long int time = 0;
 
+			/* run solver with all 100 test functions */
 			for (func_num = 1; func_num <= 100; func_num++)
 			{
 				if ((error_code = GKLS_arg_generate(func_num)) != GKLS_OK) {
@@ -131,6 +141,7 @@ int main()
 
 				gs.checkErrors();
 
+				/* if answer differ from real global minimum more than eps, the answer is wrong */
 				if ((1.0*fabs(GKLS_global_value - UPB)) > eps) {
 					summary++;
 					allnodes.push_back(func_num);
@@ -141,15 +152,16 @@ int main()
 				GKLS_free();
 			} /* for func_num*/
 			
-
+			/* Write results to file */
+			fp << "Dim = " << GKLS_dim << ';';
 			fp << nod << ';' << summary << ';';
 			for (int &d : allnodes) {
 				fp << d << ' ';
 			}
 			fp << ";time = " << time;
 			fp << ";avg.time = " << static_cast<double>(time) / 100.0;
-			fp << ';' << static_cast<long double>(fevs) / 100.0;
-			fp << ';' << static_cast<long double>(its) / 100.0 << std::endl;
+			fp << ';' << "avg. num. of evaluations = " << static_cast<long double>(fevs) / 100.0;
+			fp << ';' << "avg. num. of iterations" << static_cast<long double>(its) / 100.0 << std::endl;
 
 		std::cout << std::endl;
 
