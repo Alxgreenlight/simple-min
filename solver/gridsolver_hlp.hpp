@@ -86,10 +86,8 @@ public:
 
 		/* Add first hyperinterval */
 
-		part<T> pt(dim, a, b);
-
 		try {
-			P.emplace_back(pt);
+			P.emplace_back(dim,a,b);
 		}
 		catch (std::exception& e) {
 			std::cerr << e.what() << std::endl;
@@ -150,8 +148,7 @@ public:
 					}
 					/* Add 2 new hyperintervals, parent HI no longer considered */
 					try {
-						pt.change(P[i].a, b1);
-						P1.emplace_back(pt);
+						P1.emplace_back(dim, P[i].a, b1);
 					}
 					catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
@@ -159,8 +156,7 @@ public:
 						return UPB;
 					}
 					try {
-						pt.change(a1, P[i].b);
-						P1.emplace_back(pt);
+						P1.emplace_back(dim, a1, P[i].b);
 					}
 					catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
@@ -478,10 +474,8 @@ public:
 
 		/* Add first hyperinterval */
 
-		part<T> pt(this->dim, a, b);
-
 		try {
-			P.emplace_back(pt);
+			P.emplace_back(this->dim, a, b);
 		}
 		catch (std::exception& e) {
 			std::cerr << e.what() << std::endl;
@@ -554,8 +548,7 @@ public:
 					}
 					/* Add 2 new hyperintervals, parent HI no longer considered */
 					try {
-						pt.change(P[i].a, b1);
-						P1.emplace_back(pt);
+						P1.emplace_back(this->dim, P[i].a, b1);
 					}
 					catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
@@ -563,8 +556,7 @@ public:
 						return this->UPB;
 					}
 					try {
-						pt.change(a1, P[i].b);
-						P1.emplace_back(pt);
+						P1.emplace_back(this->dim, a1, P[i].b);
 					}
 					catch (std::exception& e) {
 						std::cerr << e.what() << std::endl;
