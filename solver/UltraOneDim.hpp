@@ -5,7 +5,7 @@
 #include <functional>
 
 template<class T>
-T ultraoptimizer(const int nodes, const T *a, const T *b, T* xfound, T *Frp, const std::function<T(const T * const)> &compute) {
+T ultraoptimizer(const int nodes, const T a, const T b, T &xfound, T &Frp, const std::function<T(const T * const)> &compute) {
 	int np, xpp;
 	T *Fvalues = nullptr; 
 	T *Frs = nullptr, *Ls = nullptr, *xp = nullptr;
@@ -31,7 +31,7 @@ T ultraoptimizer(const int nodes, const T *a, const T *b, T* xfound, T *Frp, con
 		Ls[k] = std::numeric_limits<T>::min();
 	}
 
-	step = fabs(b[0] - a[0]) / (nodes - 1);
+	step = fabs(b - a) / (nodes - 1);
 
 #pragma omp parallel for
 	for (int j = 0; j < nodes; j++) {
@@ -39,7 +39,7 @@ T ultraoptimizer(const int nodes, const T *a, const T *b, T* xfound, T *Frp, con
 		int point = j;
 		int t = point % nodes;
 		point = (int)(point / nodes);
-		xp[nt] = a[0] + t * step;
+		xp[nt] = a + t * step;
 		T rs = compute((xp + nt));
 		Fvalues[j] = rs;
 		if (rs < Frs[nt]) {
@@ -69,9 +69,9 @@ T ultraoptimizer(const int nodes, const T *a, const T *b, T* xfound, T *Frp, con
 		}
 		L = Ls[k] > L ? Ls[k] : L;
 	}
-	xfound[0] = a[0] + node * step;
+	xfound = a + node * step;
 	/* final calculation */
-	*Frp = Fr;
+	Frp = Fr;
 	if (Fvalues != nullptr) delete[]Fvalues;
 	if (Frs != nullptr) delete[]Frs;
 	if (Ls != nullptr) delete[]Ls;
