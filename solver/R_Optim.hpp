@@ -120,7 +120,7 @@ public:
 			/* number of iterations on this step (BFS) */
 			unsigned int boxes = curBox.size();
 			this->Iterations += boxes;
-			/*DEBUG*/std::cout << has << " of " << boxes << std::endl;
+			/*DEBUG*///std::cout << has << " of " << boxes << std::endl;
 			/*DEBUG*/has = 0;
 			/* For all hyperintervals on this step perform grid search */
 			for (unsigned int i = 0; i < boxes; i++) {

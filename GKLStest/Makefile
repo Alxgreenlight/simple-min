@@ -6,6 +6,12 @@ CCFLAGS=-c
 GKLStest: example.o rnd_gen.o gkls.o
 	$(CXX) -o GKLStest example.o rnd_gen.o gkls.o -fopenmp
 
+Rv: Rexample.o rnd_gen.o gkls.o
+	$(CXX) -o R_GKLStest Rexample.o rnd_gen.o gkls.o -fopenmp
+
+Rexample.o: Rexample.cpp
+	$(CXX) $(CXXFLAGS) Rexample.cpp
+
 example.o: example.cpp
 	$(CXX) $(CXXFLAGS) example.cpp
 
@@ -16,4 +22,4 @@ rnd_gen.o: rnd_gen.c
 	$(CC) $(CCFLAGS) rnd_gen.c
 
 clean:
-	rm -rf *.o GKLStest
+	rm -rf *.o GKLStest R_GKLStest
