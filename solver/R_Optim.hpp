@@ -4,7 +4,10 @@
 #include <limits>
 #include <cmath>
 #include <stdexcept>
+#include <vector>
+#include <omp.h>
 #include "../common/bbsolver.hpp"
+/*for debugging*/ #include <iostream>
 
 
 template <class T>
@@ -24,10 +27,9 @@ protected:
 	T *grid = nullptr;
 	T *x = nullptr;
 	T *step = nullptr;
-	int *pre = nullptr;
-	
-public:
 	T maxL = std::numeric_limits<T>::min();
+	int *coords = nullptr;
+public:
 	rOptimizer() { //throws
 		if (!std::numeric_limits<T>::is_specialized) {
 			throw std::runtime_error("Bad Type");
@@ -39,18 +41,18 @@ public:
 		if (x != nullptr) delete[]x;
 		if (step != nullptr) delete[]step;
 		if (grid != nullptr) delete[]grid;
-		if (pre != nullptr) delete[]pre;
+		if (coords != nullptr) delete[]coords;
 	}
 
 	virtual void clear() {
 		if (x != nullptr) delete[]x;
 		if (step != nullptr) delete[]step;
 		if (grid != nullptr) delete[]grid;
-		if (pre != nullptr) delete[]pre;
+		if (coords != nullptr) delete[]coords;
 		x = nullptr;
 		step = nullptr;
 		grid = nullptr;
-		pre = nullptr;
+		coords = nullptr;
 		this->initialized = false;
 	}
 
@@ -69,7 +71,7 @@ public:
 			grid = new T[static_cast<int>(pow(this->h, this->dim))];
 			x = new T[this->dim];
 			step = new T[this->dim];
-			pre = new int[this->dim];
+			coords = new int[this->dim + 1];
 		}
 		catch (std::bad_alloc& e) {
 			this->initialized = false;
@@ -77,9 +79,10 @@ public:
 		}
 	}
 
-	virtual void getInfo(unsigned long long int &fevs, unsigned long int &iters) {
+	virtual void getInfo(unsigned long long int &fevs, unsigned long int &iters, T &maxL) {
 		fevs = this->FuncEvals;
 		iters = this->Iterations;
+		maxL = this->maxL;
 	}
 
 	virtual T search(int n, T* xfound, const T * const a, const T * const b, const std::function<T(const T * const)> &f) {  //throws
@@ -91,10 +94,10 @@ public:
 		std::vector<Box<T>> curBox, nextBox;
 		this->UpperBound = std::numeric_limits<T>::max();
 		if (f == nullptr) {
-			throw std::runtime_error("pointer to calc function is incorrect");
+			throw std::runtime_error("Pointer to calculation function is incorrect");
 		}
 		try {
-			curBox.emplace_back(this->dim, a, b, false);
+			curBox.emplace_back(static_cast<unsigned short>(this->dim), a, b, false);
 		}
 		catch (std::exception& e) {
 			throw e;
@@ -111,28 +114,36 @@ public:
 		catch (std::bad_alloc& ba) {
 			throw ba;
 		}
-
+		/*DEBUG*/ int has = 1;
 		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
 		while (!curBox.empty()) {
 			/* number of iterations on this step (BFS) */
 			unsigned int boxes = curBox.size();
 			this->Iterations += boxes;
-
+			/*DEBUG*/std::cout << has << " of " << boxes << std::endl;
+			/*DEBUG*/has = 0;
 			/* For all hyperintervals on this step perform grid search */
 			for (unsigned int i = 0; i < boxes; i++) {
 				T lUPB;
-				this->BoxOptimizator(curBox[i], xs, lUPB, f);
+				try {
+					this->BoxOptimizator(curBox[i], xs, lUPB, f);
+				}
+				catch (std::bad_alloc &ba) {
+					throw ba;
+				}
 				/* remember new results if less then previous */
 				UpdateRecords(lUPB, xfound, xs);
 			}
-
+			
 			/* Choose which hyperintervals should be subdivided */
 			for (unsigned int i = 0; i < boxes; i++) {
 				/* Subdivision criteria */
 				if ((!curBox[i].ready) || ((curBox[i].ready) &&  (curBox[i].LocLO < (this->UpperBound - this->eps)))) {
 					/* If subdivide, choose dimension (the longest side) */
+					/*DEBUG*/if (!curBox[i].ready) {
+						/*DEBUG*/has++;
+					/*DEBUG*/}
 					int choosen = ChooseDim(curBox[i].a, curBox[i].b);
-
 					/* Make new edges for 2 new hyperintervals */
 					for (int j = 0; j < this->dim; j++) {
 						if (j != choosen) {			/* [a .. b1] [a1 .. b] */
@@ -146,13 +157,8 @@ public:
 					}
 					/* Add 2 new hyperintervals, parent HI no longer considered */
 					try {
-						nextBox.emplace_back(this->dim, curBox[i].a, b1, curBox[i].ready, curBox[i].L_estim);
-					}
-					catch (std::exception& e) {
-						throw e;
-					}
-					try {
-						nextBox.emplace_back(this->dim, a1, curBox[i].b, curBox[i].ready, curBox[i].L_estim);
+						nextBox.emplace_back(static_cast<unsigned short>(this->dim), curBox[i].a, b1, curBox[i].ready, curBox[i].L_estim);
+						nextBox.emplace_back(static_cast<unsigned short>(this->dim), a1, curBox[i].b, curBox[i].ready, curBox[i].L_estim);
 					}
 					catch (std::exception& e) {
 						throw e;
@@ -172,7 +178,7 @@ protected:
 	virtual void UpdateRecords(const T LU, T* x, const T *xs) {
 		if (LU < this->UpperBound) {
 			this->UpperBound = LU;
-			for (int i = 0; i < dim; i++) {
+			for (int i = 0; i < this->dim; i++) {
 				x[i] = xs[i];
 			}
 		}
@@ -181,7 +187,7 @@ protected:
 	virtual int ChooseDim(const T *a, const T *b) {
 		T max = std::numeric_limits<T>::min(), cr;
 		int i, maxI = 0;
-		for (i = 0; i < dim; i++) {
+		for (i = 0; i < this->dim; i++) {
 			cr = fabs(b[i] - a[i]);
 			if (cr > max) {
 				max = cr;
@@ -191,7 +197,26 @@ protected:
 		return maxI;
 	}
 
-	virtual T estimation(const int nod, const int all) {
+	virtual int increment(int inc, int * coords) {
+		int i;
+		for (i = 0; i <= this->dim; i++) {
+			coords[i] += inc;
+			if (coords[i] > this->h) {
+				coords[i] = 0;
+			}
+			else {
+				break;
+			}
+		}
+		int j = 0;
+		for (i = 0; i <= this->dim; i++) {
+			j += coords[i] * static_cast<int>(pow(this->h, i));
+		}
+		return j;
+	}
+
+
+	virtual T estimation(const int nod, const int all) { 
 		int inc;
 		T est = std::numeric_limits<T>::min();
 		if (nod == this->l) {
@@ -203,29 +228,12 @@ protected:
 		else if (nod == this->h) {
 			inc = 1;
 		}
-		for (int i = 0; i < this->dim; i++) {
-			pre[i] = 0;
+		for (int i = 0; i <= this->dim; i++) {
+			coords[i] = 0;
 		}
-		for (int j = 0; j < all; j += inc) {
+		int j = 0;
+		while (j < all) {
 			int neighbour;
-			for (int p = 0; p < this->dim; p++) {
-				if (j / static_cast<int>(pow(this->h, p + 1)) == pre[p]) {
-					if (p == 0) { break; }
-					else {
-						j -= inc;
-						j += (inc-1)*static_cast<int>(pow(this->h, p));
-						for (int d = 0; d < p; d++) {
-							if (d == p - 1) {
-								pre[d]++;
-							}
-							else {
-								pre[d] = 0;
-							}
-						}
-						break;
-					}
-				}
-			}
 			for (int k = 0; k < this->dim; k++) {
 				int board = static_cast<int>(pow(this->h, k + 1));
 					neighbour = j + inc * board / this->h;
@@ -233,6 +241,12 @@ protected:
 					T loc = fabs(grid[j] - grid[neighbour]) / (inc * step[this->dim - 1 - k]);
 					est = loc > est ? loc : est;
 				}
+			}
+			if (inc == 1) {
+				j++;
+			}
+			else {
+				j = this->increment(inc, coords);
 			}
 		}
 		return est;
@@ -276,7 +290,7 @@ protected:
 		lEst = this->estimation(this->l, all);
 		mEst = this->estimation(this->m, all);
 		hEst = this->estimation(this->h, all);
-		if ((fabs(mEst - lEst) > fabs(hEst - mEst)) && (fabs(hEst - mEst) < 0.035*hEst) && (fabs(mEst - lEst) < 0.5*mEst)) {
+		if ((fabs(mEst - lEst) > fabs(hEst - mEst)) && (fabs(hEst - mEst) < 0.05*hEst) && (fabs(mEst - lEst) < 0.1*mEst)) {
 			B.ready = true;
 			B.L_estim = this->clarification(2, lEst, mEst, hEst);
 			if (B.L_estim > this->maxL) {
@@ -290,10 +304,11 @@ protected:
 		}
 	}
 
-	virtual void BoxOptimizator(Box<T>& B, T* xfound, T& UpperBound, const std::function<T(const T * const)> &compute) {
+	virtual void BoxOptimizator(Box<T>& B, T* xfound, T& UpperBound, const std::function<T(const T * const)> &compute) { 
 		UpperBound = std::numeric_limits<T>::max();
 		if (!B.ready) {
 			if (!isLstable(B, compute)) {
+				B.attempts++;
 				return;
 			}
 		}
@@ -335,20 +350,22 @@ protected:
 /* hyperinterval info */
 template <class T>
 class Box {
-	int size; //dimension of task
+	unsigned short size; //dimension of task
 public:
 	T *a = nullptr; //left bounds of hyperinterval
 	T *b = nullptr; //right bounds of hyperinterval
 	T LocUP, LocLO; //upper and lower estimates of minimum on the hyperinterval
 	T L_estim; //estimation for Lipshitz const (usable only if (ready))
 	bool ready = false; //Lipshitz constant estimated reliably
-	Box(const int n, const T* a, const T* b, const bool r, const double L = 0.0) {
+	unsigned int attempts = 0; //how many times L had tried to be estimated, but unsuccessful
+	Box(const unsigned short n, const T* a, const T* b, const bool r, const double L = 0.0, const unsigned short at = 0) {
 		try {
 			this->size = n;
 			this->a = new T[size];
 			this->b = new T[size];
 			this->ready = r;
 			this->L_estim = L;
+			this->attempts = at;
 		}
 		catch (const std::bad_alloc& e) {
 			if (this->a) delete[]this->a;
@@ -381,6 +398,7 @@ public:
 			this->b[i] = B.b[i];
 		}
 		this->L_estim = B.L_estim;
+		this->attempts = B.attempts;
 		this->LocLO = B.LocLO;
 		this->LocUP = B.LocUP;
 	}
@@ -403,6 +421,7 @@ public:
 			this->b[i] = B.b[i];
 		}  
 		this->L_estim = B.L_estim;
+		this->attempts = B.attempts;
 		this->LocLO = B.LocLO;
 		this->LocUP = B.LocUP;
 		return *this;
