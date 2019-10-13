@@ -5,6 +5,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <memory>
 
 # define MY_PI          3.141592653589793238462643383279502884L /* pi */
 

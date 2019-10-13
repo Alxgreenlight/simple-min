@@ -4,7 +4,7 @@
 #include <fstream>
 #include "../solver/R_Optim.hpp"
 #include "miniOneDimFuncs.hpp"
-#include "../solver/UltraOneDim.hpp"
+#include "../solver/UltraEstim.hpp"
 
 std::chrono::steady_clock sc;
 std::chrono::milliseconds atime_span = std::chrono::duration_values<std::chrono::milliseconds>::zero();
@@ -25,6 +25,7 @@ int main()
 	unsigned long long int fevals;
 	unsigned long int iters;
 	double xfound;
+	double L;
 
 	std::cout << "Set number of nodes per dimension" << std::endl << \
 		"It can significantly affect on performance!" << std::endl;
@@ -54,9 +55,9 @@ int main()
 			auto end = sc.now();
 			auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 			double diff = 1.0*fabs(elem->RealminY() - UpperBound);
-			rOpt.getInfo(fevals, iters);
+			rOpt.getInfo(fevals, iters, L);
 			std::cout << std::fixed << "Search complete:" << std::endl << "Upper bound: " << std::setprecision(10) << UpperBound << std::endl << \
-				"At " << xfound << ", with L = " << rOpt.maxL << std::endl;
+				"At " << xfound << ", with L = " << L << std::endl;
 			std::cout << std::fixed << "Diff: " << std::setprecision(10) << diff << std::endl;
 			std::cout << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
 			std::cout << "Evaluation time: " << time_span.count() << "ms" << std::endl;

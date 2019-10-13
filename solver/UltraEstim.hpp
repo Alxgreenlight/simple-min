@@ -18,7 +18,7 @@ template<class T>
 	compute - pointer to function, used for calculation
 */
 T ultraoptimizer(const int nodes, const T a, const T b, T &xfound, T &Frp, const std::function<T(const T * const)> &compute) {
-	int np, xpp;
+	int np;
 	T *Fvalues = nullptr; 
 	T *Frs = nullptr, *Ls = nullptr, *xp = nullptr;
 	int *pts = nullptr;
@@ -41,7 +41,6 @@ T ultraoptimizer(const int nodes, const T a, const T b, T &xfound, T &Frp, const
 		if (pts != nullptr) delete[]pts;
 		throw e;
 	}
-	xpp = 1;
 
 	T Fr = std::numeric_limits<T>::max();
 	T L = std::numeric_limits<T>::min();
