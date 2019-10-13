@@ -7,7 +7,7 @@
 #include <vector>
 #include <omp.h>
 #include "../common/bbsolver.hpp"
-/*for debugging*/ #include <iostream>
+
 
 
 template <class T>
@@ -17,7 +17,6 @@ template <class T>
 class rOptimizer : public BlackBoxSolver <T> {
 protected:
 	int dim;
-	int nodes;
 	T eps;
 	T UpperBound;
 	unsigned long long FuncEvals;
@@ -29,6 +28,7 @@ protected:
 	T *step = nullptr;
 	T maxL = std::numeric_limits<T>::min();
 	int *coords = nullptr;
+	int all;
 public:
 	rOptimizer() { //throws
 		if (!std::numeric_limits<T>::is_specialized) {
@@ -53,28 +53,28 @@ public:
 		step = nullptr;
 		grid = nullptr;
 		coords = nullptr;
-		this->initialized = false;
+		initialized = false;
 	}
 
-	virtual void init(const int d, const int n, const T e) {  //throws
-		if ((d >= 1) && (n >= 2) && (e > std::numeric_limits<T>::min())) {
-			this->dim = d;
-			this->nodes = n;
-			this->eps = e;
-			this->initialized = true;
+	virtual void init(const int d, const T e) {  //throws
+		if ((d >= 1) && (e > std::numeric_limits<T>::min())) {
+			dim = d;
+			eps = e;
+			all = static_cast<int>(pow(h, dim));
+			initialized = true;
 		}
 		else {
-			this->initialized = false;
+			initialized = false;
 			throw std::runtime_error("Bad initialization");
 		}
 		try {
-			grid = new T[static_cast<int>(pow(this->h, this->dim))];
-			x = new T[this->dim];
-			step = new T[this->dim];
-			coords = new int[this->dim + 1];
+			grid = new T[static_cast<int>(pow(h, dim))];
+			x = new T[dim];
+			step = new T[dim];
+			coords = new int[dim + 1];
 		}
 		catch (std::bad_alloc& e) {
-			this->initialized = false;
+			initialized = false;
 			throw e;
 		}
 	}
@@ -114,19 +114,19 @@ public:
 		catch (std::bad_alloc& ba) {
 			throw ba;
 		}
-		/*DEBUG*/ int has = 1;
+
 		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
 		while (!curBox.empty()) {
 			/* number of iterations on this step (BFS) */
 			unsigned int boxes = curBox.size();
 			this->Iterations += boxes;
-			/*DEBUG*///std::cout << has << " of " << boxes << std::endl;
-			/*DEBUG*/has = 0;
+			
 			/* For all hyperintervals on this step perform grid search */
 			for (unsigned int i = 0; i < boxes; i++) {
 				T lUPB;
 				try {
 					this->BoxOptimizator(curBox[i], xs, lUPB, f);
+					
 				}
 				catch (std::bad_alloc &ba) {
 					throw ba;
@@ -140,9 +140,7 @@ public:
 				/* Subdivision criteria */
 				if ((!curBox[i].ready) || ((curBox[i].ready) &&  (curBox[i].LocLO < (this->UpperBound - this->eps)))) {
 					/* If subdivide, choose dimension (the longest side) */
-					/*DEBUG*/if (!curBox[i].ready) {
-						/*DEBUG*/has++;
-					/*DEBUG*/}
+					
 					int choosen = ChooseDim(curBox[i].a, curBox[i].b);
 					/* Make new edges for 2 new hyperintervals */
 					for (int j = 0; j < this->dim; j++) {
@@ -157,8 +155,8 @@ public:
 					}
 					/* Add 2 new hyperintervals, parent HI no longer considered */
 					try {
-						nextBox.emplace_back(static_cast<unsigned short>(this->dim), curBox[i].a, b1, curBox[i].ready, curBox[i].L_estim);
-						nextBox.emplace_back(static_cast<unsigned short>(this->dim), a1, curBox[i].b, curBox[i].ready, curBox[i].L_estim);
+						nextBox.emplace_back(static_cast<unsigned short>(this->dim), curBox[i].a, b1, curBox[i].ready, curBox[i].L_estim, curBox[i].attempts);
+						nextBox.emplace_back(static_cast<unsigned short>(this->dim), a1, curBox[i].b, curBox[i].ready, curBox[i].L_estim, curBox[i].attempts);
 					}
 					catch (std::exception& e) {
 						throw e;
@@ -169,6 +167,7 @@ public:
 			curBox.clear();
 			curBox.swap(nextBox);
 		}
+		
 		delete[]a1; delete[]b1; delete[]xs;
 		curBox.clear();
 		return this->UpperBound;
@@ -197,7 +196,7 @@ protected:
 		return maxI;
 	}
 
-	virtual int increment(int inc, int * coords) {
+	virtual int increment(int inc) {
 		int i;
 		for (i = 0; i <= this->dim; i++) {
 			coords[i] += inc;
@@ -216,7 +215,7 @@ protected:
 	}
 
 
-	virtual T estimation(const int nod, const int all) { 
+	virtual T estimation(const int nod) { 
 		int inc;
 		T est = std::numeric_limits<T>::min();
 		if (nod == this->l) {
@@ -232,7 +231,7 @@ protected:
 			coords[i] = 0;
 		}
 		int j = 0;
-		while (j < all) {
+		while (j < this->all) {
 			int neighbour;
 			for (int k = 0; k < this->dim; k++) {
 				int board = static_cast<int>(pow(this->h, k + 1));
@@ -246,7 +245,7 @@ protected:
 				j++;
 			}
 			else {
-				j = this->increment(inc, coords);
+				j = this->increment(inc);
 			}
 		}
 		return est;
@@ -270,12 +269,16 @@ protected:
 		}
 	}
 
+	virtual T mymax(const T &f, const T &s) {
+		T r = f > s ? f : s;
+		return r;
+	}
+
 	virtual bool isLstable(Box<T>& B, const std::function<T(const T * const)> &compute) {
-		int all = static_cast<int>(pow(this->h,this->dim));
 		for (int i = 0; i < this->dim; i++) {
 			step[i] = fabs(B.b[i] - B.a[i]) / (this->h - 1);
 		}
-		for (int i = 0; i < all; i++) {
+		for (int i = 0; i < this->all; i++) {
 			int point = i;
 			for (int k = this->dim - 1; k >= 0; k--) {
 				int t = point % this->h;
@@ -285,16 +288,19 @@ protected:
 			T val = compute(x);
 			grid[i] = val;
 		}
-		this->FuncEvals += all;
+		this->FuncEvals += this->all;
 		T lEst, mEst, hEst;
-		lEst = this->estimation(this->l, all);
-		mEst = this->estimation(this->m, all);
-		hEst = this->estimation(this->h, all);
+		lEst = this->estimation(this->l);
+		mEst = this->estimation(this->m);
+		hEst = this->estimation(this->h);
 		if ((fabs(mEst - lEst) > fabs(hEst - mEst)) && (fabs(hEst - mEst) < 0.05*hEst) && (fabs(mEst - lEst) < 0.1*mEst)) {
-			B.ready = true;
-			B.L_estim = this->clarification(2, lEst, mEst, hEst);
-			if (B.L_estim > this->maxL) {
-				this->maxL = B.L_estim;
+			T Local_estim = this->clarification(2, lEst, mEst, hEst);
+			if ((B.ready == false) || (fabs(B.L_estim - Local_estim) > 0.1*this->mymax(B.L_estim, Local_estim))) {
+				B.ready = true;
+				B.L_estim = Local_estim;
+				if (B.L_estim > this->maxL) {
+					this->maxL = B.L_estim;
+				}
 			}
 			return true;
 		}
@@ -306,38 +312,26 @@ protected:
 
 	virtual void BoxOptimizator(Box<T>& B, T* xfound, T& UpperBound, const std::function<T(const T * const)> &compute) { 
 		UpperBound = std::numeric_limits<T>::max();
-		if (!B.ready) {
-			if (!isLstable(B, compute)) {
+		if (!isLstable(B, compute)) {
 				B.attempts++;
 				return;
-			}
 		}
 		int node;
 		T delta = 0.0;
 		T Fr = std::numeric_limits<T>::max();
 		for (int i = 0; i < this->dim; i++) {
-			step[i] = fabs(B.b[i] - B.a[i]) / (this->nodes - 1);
 			delta += step[i] / 2.0;
 		}
-		int all = static_cast<int>(pow(this->nodes, this->dim));
-		for (int j = 0; j < all; j++) {
-			int point = j;
-			for (int k = dim - 1; k >= 0; k--) {
-				int t = point % this->nodes;
-				point = point / this->nodes;
-				x[k] = B.a[k] + t * step[k];
-			}
-			T rs = compute(x);
-			if (rs < Fr) {
-				Fr = rs;
+		for (int j = 0; j < this->all; j++) {
+			if (this->grid[j] < Fr) {
+				Fr = this->grid[j];
 				node = j;
 			}
 		}
-		this->FuncEvals += all;
 
 		for (int k = dim - 1; k >= 0; k--) {
-			int t = node % this->nodes;
-			node = node / this->nodes;
+			int t = node % this->h;
+			node = node / this->h;
 			xfound[k] = B.a[k] + t * step[k];
 		}
 
