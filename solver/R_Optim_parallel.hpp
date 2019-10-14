@@ -196,7 +196,7 @@ protected:
 	T* UPBs, *XFs;
 public:
 	PrOptimizer_v2() try : rOptimizer<T>() { //throws
-		np = 2;// omp_get_num_procs();
+		np = omp_get_num_procs();
 		omp_set_dynamic(0);
 		omp_set_num_threads(np);
 	}
@@ -295,13 +295,13 @@ public:
 				T lUPB;
 				int nt = omp_get_thread_num();
 				try {
-					this->BoxOptimizator(curBox[i], xs + nt * this->dim, lUPB, f, nt);
+					this->BoxOptimizator(curBox[i], xs, lUPB, f, nt);
 				}
 				catch (std::bad_alloc &ba) {
 					throw ba;
 				}
 				/* remember new results if less then previous */
-				UpdateRecords(lUPB, nt, XFs + nt * this->dim, xs + nt * this->dim);
+				UpdateRecords(lUPB, nt, XFs, xs);
 			}
 
 			FinalUpdate(xfound);
@@ -344,23 +344,31 @@ public:
 		return this->UpperBound;
 	}
 
+	void printx() {
+		for (int i = 0; i < np; i++) {
+			for (int j = 0; j < this->dim; j++) {
+				std::cout << XFs[i*this->dim + j] << std::endl;
+			}
+		}
+	}
+
 protected:
-	virtual void FinalUpdate(T *xfound) {
+	virtual void FinalUpdate(T *x_dest) {
 		for (int i = 0; i < np; i++) {
 			if (UPBs[i] < this->UpperBound) {
 				this->UpperBound = UPBs[i];
 				for (int j = 0; j < this->dim; j++) {
-					xfound[i] = XFs[i*this->dim + j];
+					x_dest[j] = XFs[i*this->dim + j];
 				}
 			}
 		}
 	}
 
-	virtual void UpdateRecords(const T LU, const int nt, T* x, const T *xs) {
+	virtual void UpdateRecords(const T LU, const int nt, T* x_dest, const T *x_source) {
 		if (LU < UPBs[nt]) {
 			UPBs[nt] = LU;
 			for (int i = 0; i < this->dim; i++) {
-				x[i] = xs[i];
+				x_dest[nt*this->dim + i] = x_source[nt*this->dim + i];
 			}
 		}
 	}
@@ -499,7 +507,7 @@ protected:
 		for (int k = this->dim - 1; k >= 0; k--) {
 			int t = node % this->h;
 			node = node / this->h;
-			xfound[k] = B.a[k] + t * this->step[nt*this->dim + k];
+			xfound[nt*this->dim + k] = B.a[k] + t * this->step[nt*this->dim + k];
 		}
 
 		UpperBound = Fr;
