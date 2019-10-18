@@ -7,7 +7,6 @@
 #include <vector>
 #include <omp.h>
 #include "R_Optim.hpp"
-/*for debugging*/ #include <iostream>
 
 
 template <class T>
@@ -193,7 +192,7 @@ template <class T>
 class PrOptimizer_v2 : public rOptimizer <T> {
 protected:
 	int np;
-	T* UPBs, *XFs;
+	T* UPBs = nullptr, *XFs = nullptr;
 public:
 	PrOptimizer_v2() try : rOptimizer<T>() { //throws
 		np = omp_get_num_procs();
@@ -282,7 +281,7 @@ public:
 		catch (std::bad_alloc& ba) {
 			throw ba;
 		}
-
+		
 		/* Each hyperinterval can be subdivided or pruned (if non-promisable or fits accuracy) */
 		while (!curBox.empty()) {
 			/* number of iterations on this step (BFS) */

@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <fstream>
 #include <iterator>                          
-#include "../solver/R_Optim.hpp"
+#include "../solver/R_Optim_parallel.hpp"
 
 extern "C" {
 #include "vagris.h"
@@ -26,7 +26,6 @@ int main()
 	int dim = 2;
 	int nf; //number of test function
 	std::ofstream fp; //output file for results
-	int nodes;
 	double eps;
 	double L;
 	unsigned short errors = 0;
@@ -37,15 +36,6 @@ int main()
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		std::cin.get();
 		return -1;
-	}
-
-	/* Interactively set parameters */
-	std::cout << "Set number of nodes per dimension" << std::endl << \
-		"It can significantly affect on performance!" << std::endl;
-	std::cin >> nodes;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> nodes;
 	}
 
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
@@ -66,8 +56,8 @@ int main()
 	} //set search area for all tests to [0..1] [0..1] (like in tutorial for this tests)
 
 	try {
-		rOptimizer<double> opt;
-		opt.init(dim, nodes, eps);
+		PrOptimizer_v2<double> opt;
+		opt.init(dim, eps);
 		for (nf = 1; nf <= 100; nf++)
 		{
 			set_random(nf);

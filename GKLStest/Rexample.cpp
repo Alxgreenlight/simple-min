@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
-#include "../solver/R_Optim.hpp"
+#include "../solver/R_Optim_parallel.hpp"
 #include "../solver/UltraEstim.hpp"
 
 /* Including GKLS libraries, writen with C language */
@@ -51,13 +51,12 @@ int main()
 	int func_num;      /* test function number within a class     */
 	double maxdiff = std::numeric_limits<double>::min();	/* maximum error among all solutions */
 	std::ofstream fp;	/* output file stream */
-	int nodes;	/* Number of nodes per dimension */
 	double eps;	/* required accuracy */
 	double L;
 	unsigned short errors = 0;
 
 	/* Set parameters of GKLS */
-	GKLS_dim = 2;
+	GKLS_dim = 4;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
@@ -81,13 +80,6 @@ int main()
 	/* Set parametrs of method */
 	/* Interactive */
 
-	std::cout << "Set number of nodes per dimension" << std::endl << \
-		"It can significantly affect on performance!" << std::endl;
-	std::cin >> nodes;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> nodes;
-	}
 
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
 	std::cin >> eps;
@@ -101,7 +93,9 @@ int main()
 	a = new double[GKLS_dim];	/* For left bound of search region */
 	b = new double[GKLS_dim];	/* For right bound of search region */
 	x = new double[GKLS_dim];	/* For global minimum coordinates found */
-
+	L_accurate<double> La;
+	//La.stay_fixed(GKLS_dim, 10000);
+	PrOptimizer_v1<double> rOpt;
 
 	/* Generate the class of 100 D-type functions */
 
@@ -156,21 +150,19 @@ int main()
 			}
 		}
 		try {
-			rOptimizer<double> opt;
-			opt.init(GKLS_dim, nodes, eps);
+			rOpt.init(GKLS_dim, eps);
 
 			auto start = sc.now(); /* start time for one function evaluating */
 
 			/* perform a search */
 
-			double UPB = opt.search(GKLS_dim, x, a, b, func);
+			double UPB = rOpt.search(GKLS_dim, x, a, b, func);
 
 			/* Search completed */
 			auto end = sc.now();
-
 			atime_span += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 			auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-			opt.getInfo(fevals, iters, L);
+			rOpt.getInfo(fevals, iters, L);
 			/* Differece between obtained result and real global minimum */
 			double diff = 1.0*fabs(GKLS_global_value - UPB);
 			if (diff > eps) {
@@ -185,7 +177,8 @@ int main()
 			"At [";
 		std::copy(x, x + GKLS_dim, std::ostream_iterator<double>(fp, " ")); 
 		fp << "], with L = " << L << std::endl;
-		//fp << "Real accurate estimated L: " << ultraoptimizer<double>(static_cast<int>(GKLS_dim), 10000, a, b, x, UPB, func) << std::endl;
+		
+		//fp << "Real accurate estimated L: " << La.ultraoptimizer_f(a, b, x, UPB, func) << std::endl;
 		fp << "Real global minimum: " << std::setprecision(4) << GKLS_global_value << std::endl << std::endl << "Diff: " << std::setprecision(4) << diff << std::endl;
 		fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
 		fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
@@ -207,6 +200,7 @@ int main()
 		GKLS_free();
 
 	} /* for func_num */
+	La.unfix();
 
 	//std::cout << std::endl;
 
