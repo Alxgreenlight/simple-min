@@ -1,0 +1,2111 @@
+Расчет параллельно
+Размерность 3
+Точность 0.0001
+Time in grid evaluation: время вычисления значений функции в узлах сетки (параллельно)
+Time in estimations: время вычисления оценок константы Липшица (параллельно, две omp section)
+Time in searching minimum: время поиска наименьшего среди значений сетки (верхняя оценка), расчитывается только при 
+получении достаточно точной оценки константы Липшица (последовательно)
+
+
+D-type function number 1
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.429 -0.697 0.687]
+Search complete:
+Upper bound: -1
+At [0.4292 -0.6968 0.6868 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 4.985e-07
+Function evaluations: 2520369 in 513 iterations
+Evaluation time: 1125ms
+
+Timing here:
+Time in grid evaluation: 294218 us
+Time in estimations: 824572 us
+Time in searching minimum: 5133 us
+
+
+D-type function number 2
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.124 -0.227 -0.0807]
+Search complete:
+Upper bound: -1
+At [0.124 -0.2275 -0.08081 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 1.067e-06
+Function evaluations: 3198363 in 651 iterations
+Evaluation time: 1394ms
+
+Timing here:
+Time in grid evaluation: 652781 us
+Time in estimations: 1852202 us
+Time in searching minimum: 10954 us
+
+
+D-type function number 3
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.462 -0.238 -0.566]
+Search complete:
+Upper bound: -1
+At [-0.4617 -0.238 -0.5662 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 2.438e-07
+Function evaluations: 6627637 in 1349 iterations
+Evaluation time: 2801ms
+
+Timing here:
+Time in grid evaluation: 1144453 us
+Time in estimations: 4146555 us
+Time in searching minimum: 22516 us
+
+
+D-type function number 4
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.707 -0.729 0.333]
+Search complete:
+Upper bound: -1
+At [0.7067 -0.7295 0.3328 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 3.107e-07
+Function evaluations: 3670011 in 747 iterations
+Evaluation time: 1557ms
+
+Timing here:
+Time in grid evaluation: 1403315 us
+Time in estimations: 5436000 us
+Time in searching minimum: 29463 us
+
+
+D-type function number 5
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.127 0.984 0.18]
+Search complete:
+Upper bound: -1
+At [0.1273 0.9841 0.1802 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 4.281e-07
+Function evaluations: 2775845 in 565 iterations
+Evaluation time: 1151ms
+
+Timing here:
+Time in grid evaluation: 1586722 us
+Time in estimations: 6396364 us
+Time in searching minimum: 34894 us
+
+
+D-type function number 6
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.136 0.479 -0.121]
+Search complete:
+Upper bound: -1
+At [-0.1359 0.4789 -0.1211 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 5.049e-08
+Function evaluations: 4023747 in 819 iterations
+Evaluation time: 1756ms
+
+Timing here:
+Time in grid evaluation: 2025895 us
+Time in estimations: 7703926 us
+Time in searching minimum: 42196 us
+
+
+D-type function number 7
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.116 0.169 0.381]
+Search complete:
+Upper bound: -1
+At [-0.1162 0.1692 0.3813 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 2.506e-07
+Function evaluations: 3257319 in 663 iterations
+Evaluation time: 1412ms
+
+Timing here:
+Time in grid evaluation: 2341109 us
+Time in estimations: 8792513 us
+Time in searching minimum: 48523 us
+
+
+D-type function number 8
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.093 -0.137 -0.107]
+Search complete:
+Upper bound: -1
+At [0.09302 -0.137 -0.1072 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 6.831e-07
+Function evaluations: 3630707 in 739 iterations
+Evaluation time: 1530ms
+
+Timing here:
+Time in grid evaluation: 2615288 us
+Time in estimations: 10039767 us
+Time in searching minimum: 55500 us
+
+
+D-type function number 9
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.341 -0.663 0.153]
+Search complete:
+Upper bound: -1
+At [-0.3414 -0.6633 0.1526 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 4.897e-07
+Function evaluations: 2962539 in 603 iterations
+Evaluation time: 1249ms
+
+Timing here:
+Time in grid evaluation: 2823715 us
+Time in estimations: 11072865 us
+Time in searching minimum: 61290 us
+
+
+D-type function number 10
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.753 0.0854 -0.143]
+Search complete:
+Upper bound: -1
+At [0.7534 0.08545 -0.1433 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 2.313e-07
+Function evaluations: 2775845 in 565 iterations
+Evaluation time: 1148ms
+
+Timing here:
+Time in grid evaluation: 2989224 us
+Time in estimations: 12048434 us
+Time in searching minimum: 67188 us
+
+
+D-type function number 11
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.253 -0.0818 -0.27]
+Search complete:
+Upper bound: -1
+At [-0.2528 -0.08179 -0.2698 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 2.201e-07
+Function evaluations: 5232345 in 1065 iterations
+Evaluation time: 2199ms
+
+Timing here:
+Time in grid evaluation: 3353883 us
+Time in estimations: 13870977 us
+Time in searching minimum: 76430 us
+
+
+D-type function number 12
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.172 -0.182 0.0342]
+Search complete:
+Upper bound: -1
+At [0.1721 -0.1821 0.03418 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 2.241e-07
+Function evaluations: 4072877 in 829 iterations
+Evaluation time: 1710ms
+
+Timing here:
+Time in grid evaluation: 3643574 us
+Time in estimations: 15281774 us
+Time in searching minimum: 84130 us
+
+
+D-type function number 13
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.465 0.538 0.473]
+Search complete:
+Upper bound: -1
+At [-0.4652 0.5378 0.4734 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 8.629e-07
+Function evaluations: 4878609 in 993 iterations
+Evaluation time: 2087ms
+
+Timing here:
+Time in grid evaluation: 4050804 us
+Time in estimations: 16950276 us
+Time in searching minimum: 93058 us
+
+
+D-type function number 14
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.857 0.627 0.889]
+Search complete:
+Upper bound: -1
+At [-0.8572 0.6268 0.8893 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 1.302e-07
+Function evaluations: 4072877 in 829 iterations
+Evaluation time: 1720ms
+
+Timing here:
+Time in grid evaluation: 4340417 us
+Time in estimations: 18371023 us
+Time in searching minimum: 101045 us
+
+
+D-type function number 15
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.00982 0.863 0.412]
+Search complete:
+Upper bound: -1
+At [0.009766 0.8633 0.4119 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 3.851e-07
+Function evaluations: 3060799 in 623 iterations
+Evaluation time: 1296ms
+
+Timing here:
+Time in grid evaluation: 4571718 us
+Time in estimations: 19427767 us
+Time in searching minimum: 107354 us
+
+
+D-type function number 16
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.13 0.298 0.743]
+Search complete:
+Upper bound: -1
+At [0.1295 0.2976 0.7432 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 7.826e-08
+Function evaluations: 3620881 in 737 iterations
+Evaluation time: 1502ms
+
+Timing here:
+Time in grid evaluation: 4792331 us
+Time in estimations: 20700531 us
+Time in searching minimum: 114628 us
+
+
+D-type function number 17
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.491 -0.47 -0.838]
+Search complete:
+Upper bound: -1
+At [-0.4915 -0.4702 -0.8379 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 1.588e-07
+Function evaluations: 4318527 in 879 iterations
+Evaluation time: 1796ms
+
+Timing here:
+Time in grid evaluation: 5062387 us
+Time in estimations: 22216603 us
+Time in searching minimum: 122714 us
+
+
+D-type function number 18
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.315 0.0506 -0.338]
+Search complete:
+Upper bound: -1
+At [-0.3154 0.05054 -0.3379 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 5.668e-07
+Function evaluations: 5193041 in 1057 iterations
+Evaluation time: 2385ms
+
+Timing here:
+Time in grid evaluation: 5440150 us
+Time in estimations: 24211247 us
+Time in searching minimum: 132810 us
+
+
+D-type function number 19
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.838 0.381 -0.256]
+Search complete:
+Upper bound: -1
+At [0.8381 0.3809 -0.2566 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 3.899e-07
+Function evaluations: 4200615 in 855 iterations
+Evaluation time: 1946ms
+
+Timing here:
+Time in grid evaluation: 5727615 us
+Time in estimations: 25857835 us
+Time in searching minimum: 142029 us
+
+
+D-type function number 20
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.135 -0.863 -0.727]
+Search complete:
+Upper bound: -1
+At [-0.1346 -0.863 -0.7273 ], with L = 13.24
+Real global minimum: -1
+
+Diff: 1.553e-07
+Function evaluations: 3296623 in 671 iterations
+Evaluation time: 1525ms
+
+Timing here:
+Time in grid evaluation: 5955042 us
+Time in estimations: 27146508 us
+Time in searching minimum: 149472 us
+
+
+D-type function number 21
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.251 0.874 -0.886]
+Search complete:
+Upper bound: -1
+At [-0.2507 0.8735 -0.8862 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.887e-07
+Function evaluations: 3748619 in 763 iterations
+Evaluation time: 1730ms
+
+Timing here:
+Time in grid evaluation: 6209855 us
+Time in estimations: 28612287 us
+Time in searching minimum: 157481 us
+
+
+D-type function number 22
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.0447 0.433 -0.863]
+Search complete:
+Upper bound: -1
+At [0.04468 0.4335 -0.8633 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.412e-07
+Function evaluations: 3149233 in 641 iterations
+Evaluation time: 1457ms
+
+Timing here:
+Time in grid evaluation: 6433276 us
+Time in estimations: 29837289 us
+Time in searching minimum: 164637 us
+
+
+D-type function number 23
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.506 0.522 0.123]
+Search complete:
+Upper bound: -1
+At [-0.5063 0.5216 0.1228 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 7.194e-08
+Function evaluations: 4908087 in 999 iterations
+Evaluation time: 2306ms
+
+Timing here:
+Time in grid evaluation: 6796571 us
+Time in estimations: 31766888 us
+Time in searching minimum: 175121 us
+
+
+D-type function number 24
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0441 0.594 -0.28]
+Search complete:
+Upper bound: -1
+At [-0.04407 0.5941 -0.2803 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.056e-07
+Function evaluations: 5458343 in 1111 iterations
+Evaluation time: 2574ms
+
+Timing here:
+Time in grid evaluation: 7225527 us
+Time in estimations: 33897622 us
+Time in searching minimum: 186245 us
+
+
+D-type function number 25
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.579 0.976 0.47]
+Search complete:
+Upper bound: -1
+At [0.5792 0.9756 0.47 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 7.858e-07
+Function evaluations: 3876357 in 789 iterations
+Evaluation time: 1927ms
+
+Timing here:
+Time in grid evaluation: 7612771 us
+Time in estimations: 35426439 us
+Time in searching minimum: 194678 us
+
+
+D-type function number 26
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.657 -0.0792 -0.754]
+Search complete:
+Upper bound: -1
+At [-0.6573 -0.0791 -0.7542 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 9.961e-07
+Function evaluations: 3414535 in 695 iterations
+Evaluation time: 1662ms
+
+Timing here:
+Time in grid evaluation: 7919229 us
+Time in estimations: 36771934 us
+Time in searching minimum: 202452 us
+
+
+D-type function number 27
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.046 0.311 0.801]
+Search complete:
+Upper bound: -1
+At [-0.04602 0.311 0.8008 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 4.541e-07
+Function evaluations: 3630707 in 739 iterations
+Evaluation time: 1720ms
+
+Timing here:
+Time in grid evaluation: 8207612 us
+Time in estimations: 38193248 us
+Time in searching minimum: 210495 us
+
+
+D-type function number 28
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.859 0.115 0.709]
+Search complete:
+Upper bound: -1
+At [-0.8586 0.1152 0.7087 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.979e-07
+Function evaluations: 3149233 in 641 iterations
+Evaluation time: 1459ms
+
+Timing here:
+Time in grid evaluation: 8427127 us
+Time in estimations: 39423605 us
+Time in searching minimum: 218018 us
+
+
+D-type function number 29
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.632 -0.649 0.777]
+Search complete:
+Upper bound: -1
+At [0.6318 -0.6492 0.7766 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.151e-07
+Function evaluations: 3011669 in 613 iterations
+Evaluation time: 1387ms
+
+Timing here:
+Time in grid evaluation: 8627039 us
+Time in estimations: 40601779 us
+Time in searching minimum: 225033 us
+
+
+D-type function number 30
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.108 0.126 -0.294]
+Search complete:
+Upper bound: -1
+At [-0.1075 0.1255 -0.2944 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.411e-07
+Function evaluations: 3434187 in 699 iterations
+Evaluation time: 1595ms
+
+Timing here:
+Time in grid evaluation: 8873428 us
+Time in estimations: 41940710 us
+Time in searching minimum: 232749 us
+
+
+D-type function number 31
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.508 -0.0101 -0.937]
+Search complete:
+Upper bound: -1
+At [0.5074 -0.01001 -0.9373 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.823e-07
+Function evaluations: 4112181 in 837 iterations
+Evaluation time: 1917ms
+
+Timing here:
+Time in grid evaluation: 9180431 us
+Time in estimations: 43538939 us
+Time in searching minimum: 241858 us
+
+
+D-type function number 32
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0104 -0.619 0.33]
+Search complete:
+Upper bound: -1
+At [-0.01038 -0.6189 0.33 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.061e-07
+Function evaluations: 3542273 in 721 iterations
+Evaluation time: 1652ms
+
+Timing here:
+Time in grid evaluation: 9434694 us
+Time in estimations: 44926522 us
+Time in searching minimum: 249690 us
+
+
+D-type function number 33
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0541 -0.315 -0.194]
+Search complete:
+Upper bound: -1
+At [-0.0542 -0.3154 -0.1943 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.353e-07
+Function evaluations: 4937565 in 1005 iterations
+Evaluation time: 2314ms
+
+Timing here:
+Time in grid evaluation: 9805297 us
+Time in estimations: 46857455 us
+Time in searching minimum: 259632 us
+
+
+D-type function number 34
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.289 -0.0518 0.747]
+Search complete:
+Upper bound: -1
+At [-0.2891 -0.05176 0.7471 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.188e-07
+Function evaluations: 3532447 in 719 iterations
+Evaluation time: 1639ms
+
+Timing here:
+Time in grid evaluation: 10053651 us
+Time in estimations: 48237617 us
+Time in searching minimum: 267869 us
+
+
+D-type function number 35
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.00726 0.273 -0.259]
+Search complete:
+Upper bound: -1
+At [0.007202 0.2732 -0.2588 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.411e-07
+Function evaluations: 6313205 in 1285 iterations
+Evaluation time: 2947ms
+
+Timing here:
+Time in grid evaluation: 10519469 us
+Time in estimations: 50702174 us
+Time in searching minimum: 280448 us
+
+
+D-type function number 36
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.948 0.748 0.799]
+Search complete:
+Upper bound: -1
+At [0.9478 0.7483 0.7988 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.164e-07
+Function evaluations: 4406961 in 897 iterations
+Evaluation time: 2060ms
+
+Timing here:
+Time in grid evaluation: 10844590 us
+Time in estimations: 52425742 us
+Time in searching minimum: 289578 us
+
+
+D-type function number 37
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.981 0.0102 0.281]
+Search complete:
+Upper bound: -1
+At [-0.9814 0.01025 0.2808 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.961e-07
+Function evaluations: 2677585 in 545 iterations
+Evaluation time: 1239ms
+
+Timing here:
+Time in grid evaluation: 11032411 us
+Time in estimations: 53469387 us
+Time in searching minimum: 295846 us
+
+
+D-type function number 38
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.25 0.0865 0.506]
+Search complete:
+Upper bound: -1
+At [0.25 0.08643 0.5063 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.992e-07
+Function evaluations: 3345753 in 681 iterations
+Evaluation time: 1545ms
+
+Timing here:
+Time in grid evaluation: 11261289 us
+Time in estimations: 54775946 us
+Time in searching minimum: 304083 us
+
+
+D-type function number 39
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.356 0.332 -0.428]
+Search complete:
+Upper bound: -1
+At [-0.3558 0.3318 -0.4282 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.704e-07
+Function evaluations: 2952713 in 601 iterations
+Evaluation time: 1368ms
+
+Timing here:
+Time in grid evaluation: 11469047 us
+Time in estimations: 55928103 us
+Time in searching minimum: 310779 us
+
+
+D-type function number 40
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.647 -0.8 -0.45]
+Search complete:
+Upper bound: -1
+At [0.6466 -0.8003 -0.4497 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 6.889e-07
+Function evaluations: 3414535 in 695 iterations
+Evaluation time: 1588ms
+
+Timing here:
+Time in grid evaluation: 11710772 us
+Time in estimations: 57265529 us
+Time in searching minimum: 318107 us
+
+
+D-type function number 41
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.334 -0.0438 0.00895]
+Search complete:
+Upper bound: -1
+At [0.334 -0.0437 0.009033 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.175e-07
+Function evaluations: 4004095 in 815 iterations
+Evaluation time: 1852ms
+
+Timing here:
+Time in grid evaluation: 11987006 us
+Time in estimations: 58829862 us
+Time in searching minimum: 327065 us
+
+
+D-type function number 42
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.401 0.909 0.537]
+Search complete:
+Upper bound: -1
+At [0.4006 0.9092 0.5369 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.019e-07
+Function evaluations: 4947391 in 1007 iterations
+Evaluation time: 2297ms
+
+Timing here:
+Time in grid evaluation: 12337856 us
+Time in estimations: 60763531 us
+Time in searching minimum: 337131 us
+
+
+D-type function number 43
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.478 0.251 0.12]
+Search complete:
+Upper bound: -1
+At [0.4784 0.2507 0.1199 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 4.047e-07
+Function evaluations: 3738793 in 761 iterations
+Evaluation time: 1730ms
+
+Timing here:
+Time in grid evaluation: 12595287 us
+Time in estimations: 62225838 us
+Time in searching minimum: 345819 us
+
+
+D-type function number 44
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.355 -0.4 -0.628]
+Search complete:
+Upper bound: -1
+At [0.355 -0.3997 -0.6277 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.478e-07
+Function evaluations: 4004095 in 815 iterations
+Evaluation time: 1866ms
+
+Timing here:
+Time in grid evaluation: 12881398 us
+Time in estimations: 63794582 us
+Time in searching minimum: 354454 us
+
+
+D-type function number 45
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.0246 0.41 0.524]
+Search complete:
+Upper bound: -1
+At [0.02466 0.4099 0.5239 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 8.218e-07
+Function evaluations: 3719141 in 757 iterations
+Evaluation time: 1725ms
+
+Timing here:
+Time in grid evaluation: 13143791 us
+Time in estimations: 65247263 us
+Time in searching minimum: 362678 us
+
+
+D-type function number 46
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0222 -0.62 -0.873]
+Search complete:
+Upper bound: -1
+At [-0.02222 -0.6196 -0.8733 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.367e-07
+Function evaluations: 4013921 in 817 iterations
+Evaluation time: 1862ms
+
+Timing here:
+Time in grid evaluation: 13426701 us
+Time in estimations: 66815420 us
+Time in searching minimum: 371572 us
+
+
+D-type function number 47
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.321 0.224 -0.145]
+Search complete:
+Upper bound: -1
+At [-0.3207 0.2245 -0.1445 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.113e-07
+Function evaluations: 3041147 in 619 iterations
+Evaluation time: 1408ms
+
+Timing here:
+Time in grid evaluation: 13634974 us
+Time in estimations: 68006399 us
+Time in searching minimum: 378357 us
+
+
+D-type function number 48
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.396 0.609 0.87]
+Search complete:
+Upper bound: -1
+At [0.3965 0.6086 0.8696 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 6.788e-07
+Function evaluations: 3041147 in 619 iterations
+Evaluation time: 1405ms
+
+Timing here:
+Time in grid evaluation: 13842053 us
+Time in estimations: 69195460 us
+Time in searching minimum: 385707 us
+
+
+D-type function number 49
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.551 0.597 0.813]
+Search complete:
+Upper bound: -1
+At [-0.5513 0.5972 0.8132 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 4.373e-07
+Function evaluations: 3964791 in 807 iterations
+Evaluation time: 1848ms
+
+Timing here:
+Time in grid evaluation: 14136190 us
+Time in estimations: 70738881 us
+Time in searching minimum: 394246 us
+
+
+D-type function number 50
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.101 0.59 0.703]
+Search complete:
+Upper bound: -1
+At [0.1013 0.5903 0.7031 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 6.468e-07
+Function evaluations: 3601229 in 733 iterations
+Evaluation time: 1673ms
+
+Timing here:
+Time in grid evaluation: 14391686 us
+Time in estimations: 72146638 us
+Time in searching minimum: 402347 us
+
+
+D-type function number 51
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.34 -0.18 0.0472]
+Search complete:
+Upper bound: -1
+At [-0.3397 -0.1801 0.04712 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.816e-07
+Function evaluations: 4446265 in 905 iterations
+Evaluation time: 2062ms
+
+Timing here:
+Time in grid evaluation: 14703614 us
+Time in estimations: 73885157 us
+Time in searching minimum: 411854 us
+
+
+D-type function number 52
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.666 0.0004 0.527]
+Search complete:
+Upper bound: -1
+At [0.6655 0.0004883 0.5269 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 6.634e-07
+Function evaluations: 6165815 in 1255 iterations
+Evaluation time: 2880ms
+
+Timing here:
+Time in grid evaluation: 15152729 us
+Time in estimations: 76300171 us
+Time in searching minimum: 424233 us
+
+
+D-type function number 53
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.352 -0.31 -0.552]
+Search complete:
+Upper bound: -1
+At [0.3521 -0.3101 -0.5524 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.257e-07
+Function evaluations: 5419039 in 1103 iterations
+Evaluation time: 2541ms
+
+Timing here:
+Time in grid evaluation: 15558128 us
+Time in estimations: 78422437 us
+Time in searching minimum: 435005 us
+
+
+D-type function number 54
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.241 -0.489 0.283]
+Search complete:
+Upper bound: -1
+At [0.2407 -0.4895 0.2832 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.485e-07
+Function evaluations: 4357831 in 887 iterations
+Evaluation time: 2029ms
+
+Timing here:
+Time in grid evaluation: 15870800 us
+Time in estimations: 80126770 us
+Time in searching minimum: 444357 us
+
+
+D-type function number 55
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0116 -0.733 -0.452]
+Search complete:
+Upper bound: -1
+At [-0.0116 -0.7332 -0.4524 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.697e-07
+Function evaluations: 4122007 in 839 iterations
+Evaluation time: 1910ms
+
+Timing here:
+Time in grid evaluation: 16157106 us
+Time in estimations: 81739041 us
+Time in searching minimum: 453570 us
+
+
+D-type function number 56
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.535 -0.526 -0.555]
+Search complete:
+Upper bound: -1
+At [0.5354 -0.5255 -0.5547 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.464e-07
+Function evaluations: 4800001 in 977 iterations
+Evaluation time: 2248ms
+
+Timing here:
+Time in grid evaluation: 16519809 us
+Time in estimations: 83612122 us
+Time in searching minimum: 463442 us
+
+
+D-type function number 57
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.728 0.0109 0.378]
+Search complete:
+Upper bound: -1
+At [-0.7281 0.01099 0.3777 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.827e-07
+Function evaluations: 4289049 in 873 iterations
+Evaluation time: 1994ms
+
+Timing here:
+Time in grid evaluation: 16825015 us
+Time in estimations: 85288967 us
+Time in searching minimum: 473016 us
+
+
+D-type function number 58
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.44 -0.288 -0.0774]
+Search complete:
+Upper bound: -1
+At [-0.4404 -0.2878 -0.07739 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.555e-07
+Function evaluations: 3866531 in 787 iterations
+Evaluation time: 1852ms
+
+Timing here:
+Time in grid evaluation: 17179497 us
+Time in estimations: 86776739 us
+Time in searching minimum: 481078 us
+
+
+D-type function number 59
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.556 -0.135 -0.229]
+Search complete:
+Upper bound: -1
+At [-0.556 -0.1353 -0.229 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.146e-07
+Function evaluations: 3306449 in 673 iterations
+Evaluation time: 1530ms
+
+Timing here:
+Time in grid evaluation: 17405355 us
+Time in estimations: 88072153 us
+Time in searching minimum: 488337 us
+
+
+D-type function number 60
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.955 -0.231 -0.213]
+Search complete:
+Upper bound: -1
+At [0.9547 -0.2307 -0.2126 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.203e-07
+Function evaluations: 4917913 in 1001 iterations
+Evaluation time: 2294ms
+
+Timing here:
+Time in grid evaluation: 17763751 us
+Time in estimations: 89994768 us
+Time in searching minimum: 498757 us
+
+
+D-type function number 61
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.408 0.151 0.494]
+Search complete:
+Upper bound: -1
+At [-0.408 0.1514 0.4939 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 6.253e-08
+Function evaluations: 4318527 in 879 iterations
+Evaluation time: 2007ms
+
+Timing here:
+Time in grid evaluation: 18071419 us
+Time in estimations: 91682299 us
+Time in searching minimum: 507867 us
+
+
+D-type function number 62
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.0836 0.621 0.385]
+Search complete:
+Upper bound: -1
+At [0.08362 0.6213 0.3851 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.507e-07
+Function evaluations: 3512795 in 715 iterations
+Evaluation time: 1636ms
+
+Timing here:
+Time in grid evaluation: 18324231 us
+Time in estimations: 93056114 us
+Time in searching minimum: 515762 us
+
+
+D-type function number 63
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.126 0.688 0.783]
+Search complete:
+Upper bound: -1
+At [-0.1256 0.688 0.7827 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.811e-07
+Function evaluations: 5183215 in 1055 iterations
+Evaluation time: 2411ms
+
+Timing here:
+Time in grid evaluation: 18693417 us
+Time in estimations: 95084691 us
+Time in searching minimum: 526176 us
+
+
+D-type function number 64
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.967 0.179 -0.436]
+Search complete:
+Upper bound: -1
+At [-0.9668 0.1787 -0.4358 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.43e-07
+Function evaluations: 3581577 in 729 iterations
+Evaluation time: 1671ms
+
+Timing here:
+Time in grid evaluation: 18953186 us
+Time in estimations: 96486325 us
+Time in searching minimum: 534087 us
+
+
+D-type function number 65
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0274 0.653 0.714]
+Search complete:
+Upper bound: -1
+At [-0.02734 0.6536 0.7141 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 8.938e-07
+Function evaluations: 4839305 in 985 iterations
+Evaluation time: 2246ms
+
+Timing here:
+Time in grid evaluation: 19292165 us
+Time in estimations: 98380391 us
+Time in searching minimum: 543970 us
+
+
+D-type function number 66
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.25 -0.231 -0.442]
+Search complete:
+Upper bound: -1
+At [-0.2499 -0.2312 -0.4421 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.67e-07
+Function evaluations: 5409213 in 1101 iterations
+Evaluation time: 2520ms
+
+Timing here:
+Time in grid evaluation: 19677885 us
+Time in estimations: 100500464 us
+Time in searching minimum: 555069 us
+
+
+D-type function number 67
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.397 0.604 0.938]
+Search complete:
+Upper bound: -1
+At [0.3971 0.6038 0.9377 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 4.288e-07
+Function evaluations: 3925487 in 799 iterations
+Evaluation time: 1822ms
+
+Timing here:
+Time in grid evaluation: 19953946 us
+Time in estimations: 102035390 us
+Time in searching minimum: 563718 us
+
+
+D-type function number 68
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.116 0.615 -0.792]
+Search complete:
+Upper bound: -1
+At [0.1163 0.615 -0.7925 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.776e-08
+Function evaluations: 3719141 in 757 iterations
+Evaluation time: 1729ms
+
+Timing here:
+Time in grid evaluation: 20222075 us
+Time in estimations: 103486671 us
+Time in searching minimum: 571654 us
+
+
+D-type function number 69
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.258 -0.0671 0.324]
+Search complete:
+Upper bound: -1
+At [-0.2584 -0.06714 0.3245 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.799e-07
+Function evaluations: 4239919 in 863 iterations
+Evaluation time: 1966ms
+
+Timing here:
+Time in grid evaluation: 20517466 us
+Time in estimations: 105146128 us
+Time in searching minimum: 580560 us
+
+
+D-type function number 70
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.248 -0.0936 -0.633]
+Search complete:
+Upper bound: -1
+At [-0.2476 -0.09351 -0.6335 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.382e-07
+Function evaluations: 3552099 in 723 iterations
+Evaluation time: 1661ms
+
+Timing here:
+Time in grid evaluation: 20789696 us
+Time in estimations: 106525580 us
+Time in searching minimum: 588461 us
+
+
+D-type function number 71
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.785 -0.229 0.58]
+Search complete:
+Upper bound: -1
+At [-0.7848 -0.2292 0.5803 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 4.731e-08
+Function evaluations: 4102355 in 835 iterations
+Evaluation time: 1967ms
+
+Timing here:
+Time in grid evaluation: 21164709 us
+Time in estimations: 108106580 us
+Time in searching minimum: 597010 us
+
+
+D-type function number 72
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.199 -0.487 -0.694]
+Search complete:
+Upper bound: -1
+At [0.1989 -0.4873 -0.6943 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.12e-07
+Function evaluations: 3886183 in 791 iterations
+Evaluation time: 1801ms
+
+Timing here:
+Time in grid evaluation: 21438799 us
+Time in estimations: 109622984 us
+Time in searching minimum: 605323 us
+
+
+D-type function number 73
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.618 0.00725 -0.319]
+Search complete:
+Upper bound: -1
+At [-0.6176 0.007324 -0.3191 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.2e-07
+Function evaluations: 3011669 in 613 iterations
+Evaluation time: 1389ms
+
+Timing here:
+Time in grid evaluation: 21640042 us
+Time in estimations: 110802487 us
+Time in searching minimum: 612250 us
+
+
+D-type function number 74
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.47 -0.954 -0.573]
+Search complete:
+Upper bound: -1
+At [-0.4695 -0.9536 -0.5725 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 1.467e-07
+Function evaluations: 5360083 in 1091 iterations
+Evaluation time: 2502ms
+
+Timing here:
+Time in grid evaluation: 22037167 us
+Time in estimations: 112893560 us
+Time in searching minimum: 622930 us
+
+
+D-type function number 75
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.143 0.657 -0.842]
+Search complete:
+Upper bound: -1
+At [-0.1426 0.6572 -0.8416 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 5.374e-07
+Function evaluations: 2923235 in 595 iterations
+Evaluation time: 1345ms
+
+Timing here:
+Time in grid evaluation: 22230988 us
+Time in estimations: 114037124 us
+Time in searching minimum: 629637 us
+
+
+D-type function number 76
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.0863 -0.713 -0.475]
+Search complete:
+Upper bound: -1
+At [0.0863 -0.7134 -0.475 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.208e-08
+Function evaluations: 5242171 in 1067 iterations
+Evaluation time: 2442ms
+
+Timing here:
+Time in grid evaluation: 22607913 us
+Time in estimations: 116088352 us
+Time in searching minimum: 640197 us
+
+
+D-type function number 77
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.117 0.558 -0.853]
+Search complete:
+Upper bound: -1
+At [-0.1173 0.5581 -0.8533 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 2.046e-07
+Function evaluations: 3355579 in 683 iterations
+Evaluation time: 1552ms
+
+Timing here:
+Time in grid evaluation: 22839092 us
+Time in estimations: 117399613 us
+Time in searching minimum: 647771 us
+
+
+D-type function number 78
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.904 0.766 0.0301]
+Search complete:
+Upper bound: -1
+At [0.9036 0.7659 0.03003 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 3.76e-07
+Function evaluations: 4662437 in 949 iterations
+Evaluation time: 2166ms
+
+Timing here:
+Time in grid evaluation: 23170973 us
+Time in estimations: 119221381 us
+Time in searching minimum: 657693 us
+
+
+D-type function number 79
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.186 -0.323 -0.15]
+Search complete:
+Upper bound: -1
+At [-0.1855 -0.3228 -0.1494 ], with L = 14.18
+Real global minimum: -1
+
+Diff: 9.038e-07
+Function evaluations: 2893757 in 589 iterations
+Evaluation time: 1346ms
+
+Timing here:
+Time in grid evaluation: 23376362 us
+Time in estimations: 120353859 us
+Time in searching minimum: 664137 us
+
+
+D-type function number 80
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.326 -0.652 -0.933]
+Search complete:
+Upper bound: -1
+At [-0.3258 -0.6521 -0.9333 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 2.291e-07
+Function evaluations: 3473491 in 707 iterations
+Evaluation time: 1620ms
+
+Timing here:
+Time in grid evaluation: 23627319 us
+Time in estimations: 121714157 us
+Time in searching minimum: 671612 us
+
+
+D-type function number 81
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.0832 0.373 0.0867]
+Search complete:
+Upper bound: -1
+At [0.08325 0.3735 0.08667 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 1.837e-07
+Function evaluations: 3964791 in 807 iterations
+Evaluation time: 1853ms
+
+Timing here:
+Time in grid evaluation: 23920878 us
+Time in estimations: 123263173 us
+Time in searching minimum: 680165 us
+
+
+D-type function number 82
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.872 -0.283 -0.0487]
+Search complete:
+Upper bound: -1
+At [-0.8717 -0.2826 -0.04871 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 8.87e-08
+Function evaluations: 3748619 in 763 iterations
+Evaluation time: 1749ms
+
+Timing here:
+Time in grid evaluation: 24194228 us
+Time in estimations: 124728773 us
+Time in searching minimum: 688205 us
+
+
+D-type function number 83
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.11 -0.103 0.565]
+Search complete:
+Upper bound: -1
+At [0.1101 -0.1033 0.5652 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 5.257e-07
+Function evaluations: 3247493 in 661 iterations
+Evaluation time: 1508ms
+
+Timing here:
+Time in grid evaluation: 24423353 us
+Time in estimations: 125998577 us
+Time in searching minimum: 695606 us
+
+
+D-type function number 84
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.265 -0.311 0.689]
+Search complete:
+Upper bound: -1
+At [-0.2646 -0.3107 0.6892 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 2.031e-07
+Function evaluations: 5202867 in 1059 iterations
+Evaluation time: 2438ms
+
+Timing here:
+Time in grid evaluation: 24820584 us
+Time in estimations: 128026357 us
+Time in searching minimum: 706154 us
+
+
+D-type function number 85
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.268 -0.0574 0.681]
+Search complete:
+Upper bound: -1
+At [0.2676 -0.05737 0.6814 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 5.108e-07
+Function evaluations: 3817401 in 777 iterations
+Evaluation time: 1777ms
+
+Timing here:
+Time in grid evaluation: 25092361 us
+Time in estimations: 129521881 us
+Time in searching minimum: 714276 us
+
+
+D-type function number 86
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.0455 -0.297 -0.237]
+Search complete:
+Upper bound: -1
+At [0.04541 -0.2968 -0.2367 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 2.32e-07
+Function evaluations: 4338179 in 883 iterations
+Evaluation time: 2073ms
+
+Timing here:
+Time in grid evaluation: 25467106 us
+Time in estimations: 131208111 us
+Time in searching minimum: 723541 us
+
+
+D-type function number 87
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0352 0.236 -0.11]
+Search complete:
+Upper bound: -1
+At [-0.03528 0.2363 -0.1101 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 5.246e-07
+Function evaluations: 4515047 in 919 iterations
+Evaluation time: 2102ms
+
+Timing here:
+Time in grid evaluation: 25789036 us
+Time in estimations: 132976367 us
+Time in searching minimum: 733285 us
+
+
+D-type function number 88
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.826 0.0838 0.256]
+Search complete:
+Upper bound: -1
+At [-0.8259 0.08386 0.2561 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 1.981e-07
+Function evaluations: 4082703 in 831 iterations
+Evaluation time: 1895ms
+
+Timing here:
+Time in grid evaluation: 26076516 us
+Time in estimations: 134573331 us
+Time in searching minimum: 742107 us
+
+
+D-type function number 89
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.716 -0.238 0.923]
+Search complete:
+Upper bound: -1
+At [-0.7161 -0.238 0.9231 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 1.981e-07
+Function evaluations: 4623133 in 941 iterations
+Evaluation time: 2159ms
+
+Timing here:
+Time in grid evaluation: 26414244 us
+Time in estimations: 136382651 us
+Time in searching minimum: 751576 us
+
+
+D-type function number 90
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.682 -0.159 0.854]
+Search complete:
+Upper bound: -1
+At [0.6821 -0.1594 0.8538 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 2.497e-07
+Function evaluations: 2756193 in 561 iterations
+Evaluation time: 1278ms
+
+Timing here:
+Time in grid evaluation: 26608496 us
+Time in estimations: 137458647 us
+Time in searching minimum: 757905 us
+
+
+D-type function number 91
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.378 -0.0985 0.495]
+Search complete:
+Upper bound: -1
+At [-0.3783 -0.09839 0.4946 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 2.564e-07
+Function evaluations: 3188537 in 649 iterations
+Evaluation time: 1470ms
+
+Timing here:
+Time in grid evaluation: 26824198 us
+Time in estimations: 138703924 us
+Time in searching minimum: 765424 us
+
+
+D-type function number 92
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.842 -0.966 -0.25]
+Search complete:
+Upper bound: -1
+At [0.8423 -0.9658 -0.25 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 5.661e-07
+Function evaluations: 3355579 in 683 iterations
+Evaluation time: 1558ms
+
+Timing here:
+Time in grid evaluation: 27061790 us
+Time in estimations: 140015172 us
+Time in searching minimum: 772966 us
+
+
+D-type function number 93
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.266 -0.136 0.0104]
+Search complete:
+Upper bound: -1
+At [-0.2664 -0.1357 0.0105 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 1.164e-07
+Function evaluations: 4691915 in 955 iterations
+Evaluation time: 2177ms
+
+Timing here:
+Time in grid evaluation: 27391429 us
+Time in estimations: 141850345 us
+Time in searching minimum: 782781 us
+
+
+D-type function number 94
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.373 -0.422 -0.2]
+Search complete:
+Upper bound: -1
+At [0.3728 -0.4221 -0.2002 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 4.855e-07
+Function evaluations: 3719141 in 757 iterations
+Evaluation time: 1734ms
+
+Timing here:
+Time in grid evaluation: 27662094 us
+Time in estimations: 143303517 us
+Time in searching minimum: 790614 us
+
+
+D-type function number 95
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.893 -0.66 0.441]
+Search complete:
+Upper bound: -1
+At [0.8926 -0.6597 0.4407 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 4.853e-07
+Function evaluations: 3846879 in 783 iterations
+Evaluation time: 1787ms
+
+Timing here:
+Time in grid evaluation: 27933281 us
+Time in estimations: 144808789 us
+Time in searching minimum: 798860 us
+
+
+D-type function number 96
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.443 -0.474 -0.507]
+Search complete:
+Upper bound: -1
+At [-0.4434 -0.4739 -0.5076 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 4.307e-07
+Function evaluations: 4898261 in 997 iterations
+Evaluation time: 2283ms
+
+Timing here:
+Time in grid evaluation: 28290350 us
+Time in estimations: 146721058 us
+Time in searching minimum: 809471 us
+
+
+D-type function number 97
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0387 -0.782 0.643]
+Search complete:
+Upper bound: -1
+At [-0.03857 -0.782 0.6433 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 9.639e-07
+Function evaluations: 4367657 in 889 iterations
+Evaluation time: 2023ms
+
+Timing here:
+Time in grid evaluation: 28594162 us
+Time in estimations: 148429095 us
+Time in searching minimum: 818587 us
+
+
+D-type function number 98
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[0.984 0.265 0.634]
+Search complete:
+Upper bound: -1
+At [0.9843 0.2649 0.6335 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 5.388e-08
+Function evaluations: 3886183 in 791 iterations
+Evaluation time: 1808ms
+
+Timing here:
+Time in grid evaluation: 28873166 us
+Time in estimations: 149947722 us
+Time in searching minimum: 826727 us
+
+
+D-type function number 99
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.0998 -0.483 0.597]
+Search complete:
+Upper bound: -1
+At [-0.09985 -0.4829 0.5967 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 4.583e-07
+Function evaluations: 3385057 in 689 iterations
+Evaluation time: 1567ms
+
+Timing here:
+Time in grid evaluation: 29106985 us
+Time in estimations: 151272036 us
+Time in searching minimum: 834299 us
+
+
+D-type function number 100
+of the class with the following parameters:
+    global minimum value   = -1;
+
+There is one global minimizer.
+The global minimizer coordinates are: 1:	[-0.547 0.0636 -0.141]
+Search complete:
+Upper bound: -1
+At [-0.5468 0.06348 -0.1409 ], with L = 14.97
+Real global minimum: -1
+
+Diff: 5.377e-07
+Function evaluations: 3522621 in 717 iterations
+Evaluation time: 1634ms
+
+Timing here:
+Time in grid evaluation: 29355673 us
+Time in estimations: 152647244 us
+Time in searching minimum: 842121 us
+
+
+Total evaluation time: 183053ms
+Maximum difference in this set: 1.067e-06
