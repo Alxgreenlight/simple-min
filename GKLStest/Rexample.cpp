@@ -56,7 +56,7 @@ int main()
 	unsigned short errors = 0;
 
 	/* Set parameters of GKLS */
-	GKLS_dim = 4;
+	GKLS_dim = 3;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
@@ -182,6 +182,8 @@ int main()
 		fp << "Real global minimum: " << std::setprecision(4) << GKLS_global_value << std::endl << std::endl << "Diff: " << std::setprecision(4) << diff << std::endl;
 		fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
 		fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
+		fp << std::endl;
+		rOpt.debug_time(fp);
 		fp << std::endl << std::endl;
 		}
 		catch (std::exception &e) {
