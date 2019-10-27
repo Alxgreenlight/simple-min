@@ -5,7 +5,8 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
-#include "../solver/R_Optim_parallel.hpp"
+#include "../Parallel_issue/R_Optim.hpp"
+//#include "../Parallel_issue/R_Optim_Pure_Parallel.hpp"
 #include "../solver/UltraEstim.hpp"
 
 /* Including GKLS libraries, writen with C language */
@@ -95,7 +96,7 @@ int main()
 	x = new double[GKLS_dim];	/* For global minimum coordinates found */
 	L_accurate<double> La;
 	//La.stay_fixed(GKLS_dim, 10000);
-	PrOptimizer_v1<double> rOpt;
+	rOptimizer<double> rOpt;
 
 	/* Generate the class of 100 D-type functions */
 

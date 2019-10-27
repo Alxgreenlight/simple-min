@@ -173,14 +173,14 @@ protected:
 		for (int i = 0; i < this->dim; i++) {
 			delta += this->step[i] / 2.0;
 		}
-		auto s = sc.now();
+		auto s = this->sc.now();
 		for (int j = 0; j < this->all; j++) {
 			if (this->grid[j] < Fr) {
 				Fr = this->grid[j];
 				node = j;
 			}
 		}
-		auto e = sc.now();
+		auto e = this->sc.now();
 		this->minsearch += std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
 		for (int k = this->dim - 1; k >= 0; k--) {
