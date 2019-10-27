@@ -56,7 +56,7 @@ int main()
 	unsigned short errors = 0;
 
 	/* Set parameters of GKLS */
-	GKLS_dim = 2;
+	GKLS_dim = 4;
 	GKLS_num_minima = 10;
 	if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
 		return error_code;
@@ -80,6 +80,10 @@ int main()
 	/* Set parametrs of method */
 	/* Interactive */
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 044632ce294e4e5141810844821e9234eb989076
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
 	std::cin >> eps;
 	while (std::cin.fail()) {
@@ -92,7 +96,9 @@ int main()
 	a = new double[GKLS_dim];	/* For left bound of search region */
 	b = new double[GKLS_dim];	/* For right bound of search region */
 	x = new double[GKLS_dim];	/* For global minimum coordinates found */
-
+	L_accurate<double> La;
+	//La.stay_fixed(GKLS_dim, 10000);
+	PrOptimizer_v1<double> rOpt;
 
 	/* Generate the class of 100 D-type functions */
 
@@ -147,21 +153,24 @@ int main()
 			}
 		}
 		try {
+<<<<<<< HEAD
 			PrOptimizer_v1<double> opt;
 			opt.init(GKLS_dim, eps);
+=======
+			rOpt.init(GKLS_dim, eps);
+>>>>>>> 044632ce294e4e5141810844821e9234eb989076
 
 			auto start = sc.now(); /* start time for one function evaluating */
 
 			/* perform a search */
 
-			double UPB = opt.search(GKLS_dim, x, a, b, func);
+			double UPB = rOpt.search(GKLS_dim, x, a, b, func);
 
 			/* Search completed */
 			auto end = sc.now();
-
 			atime_span += std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 			auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-			opt.getInfo(fevals, iters, L);
+			rOpt.getInfo(fevals, iters, L);
 			/* Differece between obtained result and real global minimum */
 			double diff = 1.0*fabs(GKLS_global_value - UPB);
 			if (diff > eps) {
@@ -176,7 +185,8 @@ int main()
 			"At [";
 		std::copy(x, x + GKLS_dim, std::ostream_iterator<double>(fp, " ")); 
 		fp << "], with L = " << L << std::endl;
-		//fp << "Real accurate estimated L: " << ultraoptimizer<double>(static_cast<int>(GKLS_dim), 10000, a, b, x, UPB, func) << std::endl;
+		
+		//fp << "Real accurate estimated L: " << La.ultraoptimizer_f(a, b, x, UPB, func) << std::endl;
 		fp << "Real global minimum: " << std::setprecision(4) << GKLS_global_value << std::endl << std::endl << "Diff: " << std::setprecision(4) << diff << std::endl;
 		fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
 		fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
@@ -198,6 +208,7 @@ int main()
 		GKLS_free();
 
 	} /* for func_num */
+	La.unfix();
 
 	//std::cout << std::endl;
 
