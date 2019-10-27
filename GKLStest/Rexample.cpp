@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
-#include "../solver/R_Optim.hpp"
+#include "../solver/R_Optim_parallel.hpp"
 #include "../solver/UltraEstim.hpp"
 
 /* Including GKLS libraries, writen with C language */
@@ -51,7 +51,6 @@ int main()
 	int func_num;      /* test function number within a class     */
 	double maxdiff = std::numeric_limits<double>::min();	/* maximum error among all solutions */
 	std::ofstream fp;	/* output file stream */
-	int nodes;	/* Number of nodes per dimension */
 	double eps;	/* required accuracy */
 	double L;
 	unsigned short errors = 0;
@@ -80,14 +79,6 @@ int main()
 
 	/* Set parametrs of method */
 	/* Interactive */
-
-	std::cout << "Set number of nodes per dimension" << std::endl << \
-		"It can significantly affect on performance!" << std::endl;
-	std::cin >> nodes;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> nodes;
-	}
 
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
 	std::cin >> eps;
@@ -156,8 +147,8 @@ int main()
 			}
 		}
 		try {
-			rOptimizer<double> opt;
-			opt.init(GKLS_dim, nodes, eps);
+			PrOptimizer_v1<double> opt;
+			opt.init(GKLS_dim, eps);
 
 			auto start = sc.now(); /* start time for one function evaluating */
 
