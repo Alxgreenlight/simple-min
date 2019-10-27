@@ -80,10 +80,7 @@ int main()
 	/* Set parametrs of method */
 	/* Interactive */
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 044632ce294e4e5141810844821e9234eb989076
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
 	std::cin >> eps;
 	while (std::cin.fail()) {
@@ -153,12 +150,7 @@ int main()
 			}
 		}
 		try {
-<<<<<<< HEAD
-			PrOptimizer_v1<double> opt;
-			opt.init(GKLS_dim, eps);
-=======
 			rOpt.init(GKLS_dim, eps);
->>>>>>> 044632ce294e4e5141810844821e9234eb989076
 
 			auto start = sc.now(); /* start time for one function evaluating */
 
