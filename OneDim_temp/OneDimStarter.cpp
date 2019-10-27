@@ -2,7 +2,7 @@
 #include <iomanip>
 #include <chrono>
 #include <fstream>
-#include "../solver/R_Optim.hpp"
+#include "../solver/R_Optim_parallel.hpp"
 #include "miniOneDimFuncs.hpp"
 #include "../solver/UltraEstim.hpp"
 
@@ -20,20 +20,11 @@ int main()
 	out.open("Results.txt", std::ios::out);
 	onedimopt::BMsOneDim<double> bms;
 	double UpperBound;
-	int nodes;
 	double eps;
 	unsigned long long int fevals;
 	unsigned long int iters;
 	double xfound;
 	double L;
-
-	std::cout << "Set number of nodes per dimension" << std::endl << \
-		"It can significantly affect on performance!" << std::endl;
-	std::cin >> nodes;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> nodes;
-	}
 
 	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
 	std::cin >> eps;
@@ -47,8 +38,8 @@ int main()
 		std::cout << "With bounds [" << elem->LBound() << "," << elem->RBound() << "]" << std::endl;
 		std::cout << "In x = " << elem->RealminX() <<  " and real y = " << elem->RealminY() << std::endl;
 		try {
-			rOptimizer<double> rOpt;
-			rOpt.init(1, nodes, eps);
+			PrOptimizer_v2<double> rOpt;
+			rOpt.init(1, eps);
 			auto start = sc.now();
 			double lb = elem->LBound(), rb = elem->RBound();
 			UpperBound = rOpt.search(1, &xfound, &lb, &rb, func);
