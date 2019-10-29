@@ -31,22 +31,21 @@ public:
 			this->dim = d;
 			this->eps = e;
 			this->all = static_cast<int>(pow(this->h, this->dim));
-			this->initialized = true;
 		}
 		else {
-			this->initialized = false;
 			throw std::runtime_error("Bad initialization");
 		}
+		clear();
 		try {
-			this->grid = new T[static_cast<int>(pow(this->h, this->dim))];
+			this->grid = new T[this->all];
 			this->x = new T[this->dim * np];
 			this->step = new T[this->dim];
 			this->coords = new int[this->dim + 1];
 		}
 		catch (std::bad_alloc& e) {
-			this->initialized = false;
 			throw e;
 		}
+		this->initialized = true;
 	}
 
 
@@ -113,6 +112,7 @@ protected:
 		for (int i = 0; i < this->dim; i++) {
 			this->step[i] = fabs(B.b[i] - B.a[i]) / (this->h - 1);
 		}
+		auto s = this->sc.now();
 #pragma omp parallel for
 		for (int i = 0; i < this->all; i++) {
 			int nt = omp_get_thread_num();
@@ -124,20 +124,25 @@ protected:
 			}
 			this->grid[i] = compute(this->x + nt * this->dim);
 		}
+		auto e = this->sc.now();
+		this->gridtime += std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 		this->FuncEvals += this->all;
 		T lEst, mEst, hEst;
-#pragma omp sections
-		{
-#pragma omp section
-			{
+		s = this->sc.now();
+//#pragma omp sections
+//		{
+//#pragma omp section
+//			{
 				lEst = estimation(this->l);
 				mEst = estimation(this->m);
-			}
-#pragma omp section
-			{
+//			}
+//#pragma omp section
+//			{
 				hEst = estimation(this->h);
-			}
-		}
+		//	}
+		//}
+		e = this->sc.now();
+		this->esttime += std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 		if ((fabs(mEst - lEst) > fabs(hEst - mEst)) && (fabs(hEst - mEst) < 0.05*hEst) && (fabs(mEst - lEst) < 0.1*mEst)) {
 			T Local_estim = this->clarification(2, lEst, mEst, hEst);
 			if ((B.ready == false) || (fabs(B.L_estim - Local_estim) > 0.1*this->mymax(B.L_estim, Local_estim))) {
@@ -167,14 +172,15 @@ protected:
 		for (int i = 0; i < this->dim; i++) {
 			delta += this->step[i] / 2.0;
 		}
+		auto s = sc.now();
 		for (int j = 0; j < this->all; j++) {
 			if (this->grid[j] < Fr) {
 				Fr = this->grid[j];
 				node = j;
 			}
 		}
-
-
+		auto e = sc.now();
+		this->minsearch += std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
 		for (int k = this->dim - 1; k >= 0; k--) {
 			int t = node % this->h;
@@ -229,10 +235,8 @@ public:
 			this->dim = d;
 			this->eps = e;
 			this->all = static_cast<int>(pow(this->h, this->dim));
-			this->initialized = true;
 		}
 		else {
-			this->initialized = false;
 			throw std::runtime_error("Bad initialization");
 		}
 		try {
@@ -244,25 +248,27 @@ public:
 			XFs = new T[this->dim*np];
 		}
 		catch (std::bad_alloc& e) {
-			this->initialized = false;
 			throw e;
 		}
+		this->initialized = true;
 	}
 
 	virtual T search(int n, T* xfound, const T * const a, const T * const b, const std::function<T(const T * const)> &f) {  //throws
 		if ((!this->initialized) || (n != this->dim)) {
 			throw std::runtime_error("Provide correct initialization first (from search func.)");
 		}
+		if (f == nullptr) {
+			throw std::runtime_error("Pointer to calculation function is incorrect");
+		}
 		this->FuncEvals = 0;
 		this->Iterations = 0;
-		std::vector<Box<T>> curBox, nextBox;
+		this->maxL = std::numeric_limits<T>::min();
 		this->UpperBound = std::numeric_limits<T>::max();
 		for (int i = 0; i < np; i++) {
 			UPBs[i] = std::numeric_limits<T>::max();
 		}
-		if (f == nullptr) {
-			throw std::runtime_error("Pointer to calculation function is incorrect");
-		}
+		
+		std::vector<Box<T>> curBox, nextBox;
 		try {
 			curBox.emplace_back(static_cast<unsigned short>(this->dim), a, b, false);
 		}
@@ -341,14 +347,6 @@ public:
 		delete[]a1; delete[]b1; delete[]xs;
 		curBox.clear();
 		return this->UpperBound;
-	}
-
-	void printx() {
-		for (int i = 0; i < np; i++) {
-			for (int j = 0; j < this->dim; j++) {
-				std::cout << XFs[i*this->dim + j] << std::endl;
-			}
-		}
 	}
 
 protected:
@@ -514,6 +512,16 @@ protected:
 		B.LocLO = Fr - B.L_estim * delta;
 	}
 };
+
+
+
+
+
+
+
+
+
+
 
 
 

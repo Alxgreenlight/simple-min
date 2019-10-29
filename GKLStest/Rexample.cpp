@@ -5,8 +5,7 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
-#include "../Parallel_issue/R_Optim.hpp"
-//#include "../Parallel_issue/R_Optim_Pure_Parallel.hpp"
+#include "../solver/R_Optim_Pure_Parallel.hpp"
 #include "../solver/UltraEstim.hpp"
 
 /* Including GKLS libraries, writen with C language */
@@ -89,6 +88,8 @@ int main()
 		std::cin >> eps;
 	}
 
+
+	fp << GKLS_dim << " dimension problems with accuracy eps = " << eps << std::endl << std::endl;
 	/* Allocating required memory */
 
 	a = new double[GKLS_dim];	/* For left bound of search region */
