@@ -1,13 +1,13 @@
 CXX=g++
-CXXFLAGS=-c -std=c++11 -fopenmp -Wall
+CXXFLAGS=-c -O -std=c++11 -fopenmp -Wall
 CC=gcc
 CCFLAGS=-c
 
 GKLStest: example.o rnd_gen.o gkls.o
-	$(CXX) -o GKLStest example.o rnd_gen.o gkls.o -fopenmp
+	$(CXX) -o GKLStest -O example.o rnd_gen.o gkls.o -fopenmp
 
 Rv: Rexample.o rnd_gen.o gkls.o
-	$(CXX) -o R_GKLStest Rexample.o rnd_gen.o gkls.o -fopenmp
+	$(CXX) -o R_GKLStest -O Rexample.o rnd_gen.o gkls.o -fopenmp
 
 Rexample.o: Rexample.cpp
 	$(CXX) $(CXXFLAGS) Rexample.cpp

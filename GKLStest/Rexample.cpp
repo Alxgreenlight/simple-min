@@ -97,7 +97,7 @@ int main()
 	x = new double[GKLS_dim];	/* For global minimum coordinates found */
 	L_accurate<double> La;
 	//La.stay_fixed(GKLS_dim, 10000);
-	rOptimizer<double> rOpt;
+	PPrOptimizer<double> rOpt;
 
 	/* Generate the class of 100 D-type functions */
 

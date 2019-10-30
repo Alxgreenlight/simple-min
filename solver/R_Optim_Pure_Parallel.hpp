@@ -241,7 +241,7 @@ protected:
 
 
 	virtual T estimation(const int nod) {
-		int inc;
+		int inc = 1;
 		T est = std::numeric_limits<T>::min();
 		for (int i = 0; i < np; i++) {
 			ests[i] = std::numeric_limits<T>::min();
@@ -361,7 +361,7 @@ protected:
 			B.attempts++;
 			return;
 		}
-		int node;
+		int node = 0;
 		T delta = 0.0;
 		T Fr = std::numeric_limits<T>::max();
 		for (int i = 0; i < dim; i++) {
