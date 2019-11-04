@@ -39,6 +39,10 @@ public:
 		if (Ls != nullptr) delete[]Ls;
 		if (pts != nullptr) delete[]pts;
 	}
+	/*
+		d - dimension of tasks
+		n - number of nodes per dimension in required grid
+	*/
 	virtual void stay_fixed(int d, int n) {
 		if ((d > 0) && (n >= 2)) {
 			fixed = true;
@@ -245,6 +249,10 @@ public:
 
 	}
 
+	/*
+		used after stay_fixed
+		for evaluation some functions with the same grid and dimension
+	*/
 	T ultraoptimizer_f(const T *a, const T *b, T* xfound, T &Frp, const std::function<T(const T * const)> &compute) {
 		T Fr = std::numeric_limits<T>::max();
 		T L = std::numeric_limits<T>::min();

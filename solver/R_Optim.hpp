@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <vector>
 #include <omp.h>
-#include "../common/bbsolver.hpp"
+#include "common/bbsolver.hpp"
 #include <fstream>
 #include <chrono>
 
@@ -17,7 +17,7 @@ class Box;
 using us = std::chrono::duration_values<std::chrono::microseconds>;
 
 template <class T>
-class rOptimizer : public BlackBoxSolver <T> {
+class R_Optimizer : public BlackBoxSolver <T> {
 protected:
 	int dim;
 	T eps;
@@ -35,14 +35,14 @@ protected:
 	std::chrono::steady_clock sc;
 	std::chrono::microseconds gridtime = us::zero(), esttime = us::zero(), est1 = us::zero(), est2 = us::zero(), est3 = us::zero(), minsearch = us::zero();
 public:
-	rOptimizer() { //throws
+	R_Optimizer() { //throws
 		if (!std::numeric_limits<T>::is_specialized) {
 			throw std::runtime_error("Bad Type");
 		}
 		initialized = false;
 	}
 
-	~rOptimizer() {
+	~R_Optimizer() {
 		if (x != nullptr) delete[]x;
 		if (step != nullptr) delete[]step;
 		if (grid != nullptr) delete[]grid;

@@ -6,15 +6,15 @@
 #include <stdexcept>
 #include <vector>
 #include <omp.h>
-#include "R_Optim.hpp"
+#include "solver/R_Optim.hpp"
 
 
 template <class T>
-class PrOptimizer_v1 : public rOptimizer <T> {
+class PrOptimizer_v1 : public R_Optimizer <T> {
 protected:
 	int np;
 public:
-	PrOptimizer_v1() try : rOptimizer<T>() {//throws
+	PrOptimizer_v1() try : R_Optimizer<T>() {//throws
 		np = omp_get_num_procs();
 		omp_set_dynamic(0);
 		omp_set_num_threads(np);
@@ -35,7 +35,7 @@ public:
 		else {
 			throw std::runtime_error("Bad initialization");
 		}
-		clear();
+		this->clear();
 		try {
 			this->grid = new T[this->all];
 			this->x = new T[this->dim * np];
@@ -129,23 +129,14 @@ protected:
 		this->FuncEvals += this->all;
 		T lEst, mEst, hEst;
 		s = this->sc.now();
-//#pragma omp sections
-//		{
-//#pragma omp section
-//			{
 				lEst = estimation(this->l);
 				mEst = estimation(this->m);
-//			}
-//#pragma omp section
-//			{
 				hEst = estimation(this->h);
-		//	}
-		//}
 		e = this->sc.now();
 		this->esttime += std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 		if ((fabs(mEst - lEst) > fabs(hEst - mEst)) && (fabs(hEst - mEst) < 0.05*hEst) && (fabs(mEst - lEst) < 0.1*mEst)) {
 			T Local_estim = this->clarification(2, lEst, mEst, hEst);
-			if ((B.ready == false) || (fabs(B.L_estim - Local_estim) > 0.1*this->mymax(B.L_estim, Local_estim))) {
+			if ((B.ready == false) || (fabs(B.L_estim - Local_estim) > 0.1*[](T f, T s) { return f > s ? f : s; }(B.L_estim, Local_estim))) {
 				B.ready = true;
 				B.L_estim = Local_estim;
 				if (B.L_estim > this->maxL) {
@@ -172,14 +163,14 @@ protected:
 		for (int i = 0; i < this->dim; i++) {
 			delta += this->step[i] / 2.0;
 		}
-		auto s = sc.now();
+		auto s = this->sc.now();
 		for (int j = 0; j < this->all; j++) {
 			if (this->grid[j] < Fr) {
 				Fr = this->grid[j];
 				node = j;
 			}
 		}
-		auto e = sc.now();
+		auto e = this->sc.now();
 		this->minsearch += std::chrono::duration_cast<std::chrono::microseconds>(e - s);
 
 		for (int k = this->dim - 1; k >= 0; k--) {
@@ -195,12 +186,12 @@ protected:
 };
 
 template <class T>
-class PrOptimizer_v2 : public rOptimizer <T> {
+class PrOptimizer_v2 : public R_Optimizer <T> {
 protected:
 	int np;
 	T* UPBs = nullptr, *XFs = nullptr;
 public:
-	PrOptimizer_v2() try : rOptimizer<T>() { //throws
+	PrOptimizer_v2() try : R_Optimizer<T>() { //throws
 		np = omp_get_num_procs();
 		omp_set_dynamic(0);
 		omp_set_num_threads(np);
@@ -239,6 +230,7 @@ public:
 		else {
 			throw std::runtime_error("Bad initialization");
 		}
+		this->clear();
 		try {
 			this->grid = new T[np*this->all];
 			this->x = new T[np*this->dim];
@@ -467,7 +459,7 @@ protected:
 		hEst = this->estimation(this->h, nt);
 		if ((fabs(mEst - lEst) > fabs(hEst - mEst)) && (fabs(hEst - mEst) < 0.05*hEst) && (fabs(mEst - lEst) < 0.1*mEst)) {
 			T Local_estim = this->clarification(nt, 2, lEst, mEst, hEst);
-			if ((B.ready == false) || (fabs(B.L_estim - Local_estim) > 0.1*this->mymax(B.L_estim, Local_estim))) {
+			if ((B.ready == false) || (fabs(B.L_estim - Local_estim) > 0.1*[](T f, T s) { return f > s ? f : s; }(B.L_estim, Local_estim))) {
 				B.ready = true;
 				B.L_estim = Local_estim;
 				if (B.L_estim > this->maxL) {

@@ -1,18 +1,15 @@
-#ifndef R_OPTIM_HPP
-#define R_OPTIM_HPP
+#ifndef R_OPTIM_PURE_PARALLEL_HPP
+#define R_OPTIM_PURE_PARALLEL_HPP
 
 #include <limits>
 #include <cmath>
 #include <stdexcept>
 #include <vector>
 #include <omp.h>
-#include "../common/bbsolver.hpp"
 #include <fstream>
 #include <chrono>
+#include "solver/R_Optim.hpp"
 
-
-template <class T>
-class Box;
 
 using us = std::chrono::duration_values<std::chrono::microseconds>;
 
@@ -390,88 +387,5 @@ protected:
 	}
 };
 
-/* hyperinterval info */
-template <class T>
-class Box {
-	unsigned short size; //dimension of task
-public:
-	T *a = nullptr; //left bounds of hyperinterval
-	T *b = nullptr; //right bounds of hyperinterval
-	T LocUP, LocLO; //upper and lower estimates of minimum on the hyperinterval
-	T L_estim; //estimation for Lipshitz const (usable only if (ready))
-	bool ready = false; //Lipshitz constant estimated reliably
-	unsigned int attempts = 0; //how many times L had tried to be estimated, but unsuccessful
-	Box(const unsigned short n, const T* a, const T* b, const bool r, const double L = 0.0, const unsigned short at = 0) {
-		try {
-			this->size = n;
-			this->a = new T[size];
-			this->b = new T[size];
-			this->ready = r;
-			this->L_estim = L;
-			this->attempts = at;
-		}
-		catch (const std::bad_alloc& e) {
-			if (this->a) delete[]this->a;
-			if (this->b) delete[]this->b;
-			throw e;
-			return;
-		}
-		for (int i = 0; i < size; i++) {
-			this->a[i] = a[i];
-			this->b[i] = b[i];
-		}
-	}
-	Box(const Box& B) {
-		if (this->a) delete[]a;
-		if (this->b) delete[]b;
-		this->size = B.size;
-		this->ready = B.ready;
-		try {
-			this->a = new T[this->size];
-			this->b = new T[this->size];
-		}
-		catch (const std::bad_alloc& e) {
-			if (this->a) delete[]this->a;
-			if (this->b) delete[]this->b;
-			throw e;
-			return;
-		}
-		for (int i = 0; i < this->size; i++) {
-			this->a[i] = B.a[i];
-			this->b[i] = B.b[i];
-		}
-		this->L_estim = B.L_estim;
-		this->attempts = B.attempts;
-		this->LocLO = B.LocLO;
-		this->LocUP = B.LocUP;
-	}
-	Box & operator=(const Box & B) {
-		if (this->a) delete[]this->a;
-		if (this->b) delete[]this->b;
-		this->size = B.size;
-		try {
-			this->a = new T[this->size];
-			this->b = new T[this->size];
-		}
-		catch (const std::bad_alloc& e) {
-			if (this->a) delete[]a;
-			if (this->b) delete[]b;
-			throw e;
-			return *this;
-		}
-		for (int i = 0; i < this->size; i++) {
-			this->a[i] = B.a[i];
-			this->b[i] = B.b[i];
-		}  
-		this->L_estim = B.L_estim;
-		this->attempts = B.attempts;
-		this->LocLO = B.LocLO;
-		this->LocUP = B.LocUP;
-		return *this;
-	}
-	~Box() {
-		if (this->a) delete[]this->a;
-		if (this->b) delete[]this->b;
-	}
-};
+
 #endif

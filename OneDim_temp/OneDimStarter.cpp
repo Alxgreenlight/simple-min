@@ -2,9 +2,9 @@
 #include <iomanip>
 #include <chrono>
 #include <fstream>
-#include "../solver/R_Optim_parallel.hpp"
-#include "miniOneDimFuncs.hpp"
-#include "../solver/UltraEstim.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
+#include "OneDim_temp/miniOneDimFuncs.hpp"
+#include "solver/UltraEstim.hpp"
 
 std::chrono::steady_clock sc;
 std::chrono::milliseconds atime_span = std::chrono::duration_values<std::chrono::milliseconds>::zero();
@@ -38,7 +38,8 @@ int main()
 		std::cout << "With bounds [" << elem->LBound() << "," << elem->RBound() << "]" << std::endl;
 		std::cout << "In x = " << elem->RealminX() <<  " and real y = " << elem->RealminY() << std::endl;
 		try {
-			PrOptimizer_v2<double> rOpt;
+			PPrOptimizer<double> rOpt;
+			L_accurate<double> getL;
 			rOpt.init(1, eps);
 			auto start = sc.now();
 			double lb = elem->LBound(), rb = elem->RBound();
@@ -53,7 +54,7 @@ int main()
 			std::cout << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
 			std::cout << "Evaluation time: " << time_span.count() << "ms" << std::endl;
 			rOpt.clear();
-			double L = ultraoptimizer<double>(100000000, lb, rb, xfound, UpperBound, func);
+			double L = getL.ultraoptimizer_1(100000000, lb, rb, xfound, UpperBound, func);
 			std::cout << "Very accurate estimation: L = " << L << ", Upper bound = " << UpperBound << ", at " << xfound << std::endl;
 		}
 		catch (std::exception& e) {
