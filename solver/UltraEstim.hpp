@@ -4,6 +4,9 @@
 #include <omp.h>
 #include <vector>
 #include <functional>
+#include <limits>
+#include <cmath>
+#include <exception>
 
 
 
@@ -25,27 +28,31 @@ public:
 			Ls = new T[np];
 			pts = new int[np];
 		}
-		catch (std::bad_alloc& e) {
-			if (Frs != nullptr) delete[]Frs;
-			if (Ls != nullptr) delete[]Ls;
+		catch (std::exception& e) {
+			delete[]Frs;
+			delete[]Ls;
+			delete[]pts;
+			Frs = nullptr;
+			Ls = nullptr;
+			pts = nullptr;
 			throw e;
 		}
 	}
 	~L_accurate() {
-		if (grid != nullptr) delete[]grid;
-		if (xp != nullptr) delete[]xp;
-		if (step != nullptr) delete[]step;
-		if (Frs != nullptr) delete[]Frs;
-		if (Ls != nullptr) delete[]Ls;
-		if (pts != nullptr) delete[]pts;
+		delete[]grid;
+		delete[]xp;
+		delete[]step;
+		delete[]Frs;
+		delete[]Ls;
+		delete[]pts;
 	}
 	/*
 		d - dimension of tasks
 		n - number of nodes per dimension in required grid
 	*/
 	virtual void stay_fixed(int d, int n) {
+		if (fixed) unfix();
 		if ((d > 0) && (n >= 2)) {
-			fixed = true;
 			dimension = d;
 			nodes = n;
 			all = static_cast<int>(pow(nodes, dimension));
@@ -53,18 +60,20 @@ public:
 				grid = new T[all];
 				step = new T[dimension];
 				xp = new T[np*dimension];
-			}
-			catch (std::bad_alloc &e) {
-				if (grid != nullptr) delete[]grid;
-				if (step != nullptr) delete[]step;
 				fixed = false;
+			}
+			catch (std::exception &e) {
+				delete[]grid;
+				delete[]step;
+				delete[]xp;
+				grid = nullptr;
+				step = nullptr;
+				xp = nullptr;
 				throw e;
 			}
 		}
-		else {
-			fixed = false;
-		}
 	}
+
 	virtual void unfix() {
 		fixed = false;
 		delete[]grid;
@@ -94,7 +103,7 @@ public:
 			if (xp != nullptr) delete[]xp;
 			xp = new T[np];
 		}
-		catch (std::bad_alloc& e) {
+		catch (std::exception& e) {
 			if (Fvalues != nullptr) delete[]Fvalues;
 			throw e;
 		}
@@ -149,8 +158,8 @@ public:
 		xfound = a + node * step;
 
 		Frp = Fr;
-		if (Fvalues != nullptr) delete[]Fvalues;
-		if (xp != nullptr) delete[]xp;
+		delete[]Fvalues;
+		delete[]xp;
 		xp = nullptr;
 		return L;
 	}
@@ -178,7 +187,7 @@ public:
 			xp = new T[np*dim];
 			Fvalues = new T[allnodes];
 		}
-		catch (std::bad_alloc& e) {
+		catch (std::exception& e) {
 			if (step != nullptr) delete[]step;
 			if (xp != nullptr) delete[]xp;
 			throw e;
@@ -241,10 +250,10 @@ public:
 		}
 
 		Frp = Fr;
-		if (Fvalues != nullptr) delete[]Fvalues;
-		if (xp != nullptr) delete[]xp;
+		delete[]Fvalues;
+		delete[]xp;
 		xp = nullptr;
-		if (step != nullptr) delete[]step;
+		delete[]step;
 		return L;
 
 	}
@@ -257,8 +266,8 @@ public:
 		T Fr = std::numeric_limits<T>::max();
 		T L = std::numeric_limits<T>::min();
 		T delta = static_cast<T>(0);
-		if (this->fixed == false) {
-			return L;
+		if (!fixed) {
+			throw(std::runtime_error("Use stay_fixed method before use ultraoptimizer_f"));
 		}
 		int node;
 
@@ -321,7 +330,6 @@ public:
 
 		Frp = Fr;
 		return L;
-
 	}
 };
 
