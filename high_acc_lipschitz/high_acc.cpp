@@ -3,6 +3,7 @@
 #include <chrono>
 #include <fstream>
 #include <exception>
+#include "mathexplib/testfuncs/benchmarks.hpp"
 #include "solver/UltraEstim.hpp"
 #include "util/helper.hpp"
 extern "C"
@@ -16,19 +17,19 @@ extern "C"
 void doGKLS(int dim, int nod);
 void doMatx(int nod);
 
-double *a = nullptr, *b = nullptr, *x = nullptr, L;
-unsigned long long int fevals;
-unsigned long int iters;
+double *a = nullptr, *b = nullptr, *x = nullptr;
 std::chrono::steady_clock sc;
 std::chrono::milliseconds atime_span = std::chrono::duration_values<std::chrono::milliseconds>::zero();
 std::ofstream fp;
+using BM = Benchmark<double>;
+BM *ptr;
 
 int main(int argc, char **argv)
 {
     if (argc < 2)
     {
-        //helper::help(ltool);
-        return -1;
+        helper::help(ltool);
+        return 0;
     }
     std::string param(argv[1]);
     if (param == "g2")
@@ -60,7 +61,7 @@ int main(int argc, char **argv)
     else
     {
         std::cout << "Parameter is incorrect" << std::endl;
-        //helper::help(ltool);
+        helper::help(ltool);
     }
 
     return 0;
@@ -81,6 +82,63 @@ double gFunc(const double *x)
     return r;
 }
 
+double mFunc(const double *x)
+{
+    std::vector<double> xc;
+    xc.assign(x, x + ptr->getDim());
+    double v = ptr->calcFunc(xc);
+    return v;
+}
+
+void findMin(const BM &bm)
+{
+    int dim = bm.getDim();
+    delete[] a;
+    delete[] b;
+    delete[] x;
+    a = nullptr;
+    b = nullptr;
+    x = nullptr;
+    a = new double[dim];
+    b = new double[dim];
+    x = new double[dim];
+    for (int i = 0; i < dim; i++)
+    {
+        a[i] = bm.getBounds()[i].first;
+        b[i] = bm.getBounds()[i].second;
+    }
+    double UPB;
+    try
+    {
+        L_accurate<double> La;
+        fp << bm << std::endl;
+        auto start = sc.now();
+        fp << "Real accurate estimated L: " << La.ultraoptimizer_m(dim, NUMNOD, a, b, x, UPB, mFunc) << std::endl;
+        auto end = sc.now();
+        auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        fp << "Evaluation time: " << time_span.count() << " ms" << std::endl;
+        fp << std::endl
+           << std::endl;
+    }
+    catch (std::exception &e)
+    {
+        delete[] a;
+        delete[] b;
+        delete[] x;
+        a = nullptr;
+        b = nullptr;
+        x = nullptr;
+        throw e;
+    }
+    delete[] a;
+    delete[] b;
+    delete[] x;
+    a = nullptr;
+    b = nullptr;
+    x = nullptr;
+    return;
+}
+
 void doGKLS(int dim, int nod)
 {
     std::cout << "GKLS functions, dimension = " << dim << ", with nodes per dimension: " << nod << std::endl;
@@ -92,20 +150,20 @@ void doGKLS(int dim, int nod)
     GKLS_num_minima = 10;
     if ((error_code = GKLS_domain_alloc()) != GKLS_OK)
     {
-        throw(std::runtime_error(print_error_msg(error_code)));
+        throw std::runtime_error(print_error_msg(error_code));
     }
     GKLS_global_dist = 2.0 / 3.0;
     GKLS_global_radius = 0.5 * GKLS_global_dist;
     GKLS_global_value = GKLS_GLOBAL_MIN_VALUE;
     if ((error_code = GKLS_parameters_check()) != GKLS_OK)
     {
-        throw(std::runtime_error(print_error_msg(error_code)));
+        throw std::runtime_error(print_error_msg(error_code));
     }
 
     fp.open("results_g" + std::to_string(dim) + ".txt", std::ios::out);
     if (!fp.is_open())
     {
-        throw(std::runtime_error("Problem when trying to open results file"));
+        throw std::runtime_error("Problem when trying to open results file");
     }
 
     try
@@ -166,6 +224,105 @@ void doGKLS(int dim, int nod)
 void doMatx(int nod)
 {
     std::cout << "Matexplib functions with nodes per dimension: " << nod << std::endl;
+    int all = 14, cur = 0;
+    fp.open("results_ml.txt", std::ios::out);
+    if (!fp.is_open())
+    {
+        throw std::runtime_error("Problem when trying to open results file");
+    }
+    helper::progress_bar(0, all);
+    try
+    {
+        Ackley1Benchmark<double> ack1(3);
+        ptr = &ack1;
+        findMin(ack1);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        SphereBenchmark<double> sf(3);
+        ptr = &sf;
+        findMin(sf);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        RosenbrockBenchmark<double> rsb(3);
+        ptr = &rsb;
+        findMin(rsb);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        BealeBenchmark<double> Bel;
+        ptr = &Bel;
+        findMin(Bel);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        GoldsteinPriceBenchmark<double> Gdp;
+        ptr = &Gdp;
+        findMin(Gdp);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        BoothBenchmark<double> Bth;
+        ptr = &Bth;
+        findMin(Bth);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        Bukin6Benchmark<double> Bk6;
+        ptr = &Bk6;
+        findMin(Bk6);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        MatyasBenchmark<double> Mat;
+        ptr = &Mat;
+        findMin(Mat);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        HimmelblauBenchmark<double> Hmb;
+        ptr = &Hmb;
+        findMin(Hmb);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        CamelThreeHumpBenchmark<double> Cm3;
+        ptr = &Cm3;
+        findMin(Cm3);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        EggHolderBenchmark<double> egg;
+        ptr = &egg;
+        findMin(egg);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        Table2HolderTable2Benchmark<double> Tb2;
+        ptr = &Tb2;
+        findMin(Tb2);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        McCormickBenchmark<double> Mcc;
+        ptr = &Mcc;
+        findMin(Mcc);
+        cur++;
+        helper::progress_bar(cur, all);
+
+        StyblinskiTangBenchmark<double> Stb;
+        ptr = &Stb;
+        findMin(Stb);
+        cur++;
+        helper::progress_bar(cur, all);
+    }
+    catch (std::exception &e)
+    {
+        fp.close();
+        throw e;
+    }
+
     return;
 }
 

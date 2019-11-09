@@ -6,6 +6,30 @@
 #define ltool 1
 
 namespace helper{
+
+    static std::string bhelp = "This program should be used with parameter: the number of nodes per dimension set in code, \
+please change it inside\nHere you can set accuracy with which calculation should be runned. \
+Just type foolowing:\n./program_name eps\nWhere eps is float, e.g. 0.01\n\
+Now let's restart program with right parameter";
+    static std::string lthelp = "This program should be used with parameter:\n\
+It depends on the benchmark type you want to run. Just type:\n\
+./program_name [gN|ml]\n\
+Where gN means GKLS with dimensionality N (integer, e.g. g2), and ml means mathexplib (used functions defined in code)\n\
+Now let's restart program with right parameter";
+
+    void help(int tool){
+        switch (tool){
+            case benchlib:
+                std::cout << bhelp << std::endl;
+                break;
+            case ltool:
+                std::cout << lthelp << std::endl;
+                break;
+            default:
+                std::cout << std::endl;
+        }
+    }
+
     void progress_bar(int done, int todo){
         int barWidth = 70;
         float progress = 1.0*done/todo;
