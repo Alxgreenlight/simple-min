@@ -579,7 +579,7 @@ namespace snowgoose {
 			l = (int)floor(x.m_rb * M_2_PI);
 
 			for (int i = k; i <= l; i++) {
-				int test = i % 4;
+				//int test = i % 4;
 				if ((i % 4) == 1 || (i % 4) == -3)
 					p2 = true;
 				else if ((i % 4) == 3 || (i % 4) == -1)
