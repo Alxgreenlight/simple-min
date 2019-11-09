@@ -592,7 +592,7 @@ int main(int argc, char* argv[]) {
 
 
 
-	fp << "Ошибок: " << summary << " of " << sum << std::endl;
+	fp << "Summary: " << summary << " of " << sum << std::endl;
 	fp << "Total evaluation time: " << atime_span.count() << "ms" << std::endl;
 	fp << "Maximum difference in this set: " << maxdiff << std::endl;
 	fp << "Avg. evaluations: " << ae * 1.0 / sum << std::endl;
