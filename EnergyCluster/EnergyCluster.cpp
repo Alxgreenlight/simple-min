@@ -1,25 +1,31 @@
-﻿// EnergyCluster.cpp: определяет точку входа для консольного приложения.
-//
 #include <cmath>
 #include <fstream>
+#include <iterator>
+#include <algorithm>
 #include <iostream>
 #include <chrono>
-#include "../solver/gridsolver.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
+#include "util/helper.hpp"
 
 int N = 2; //number of molecules
 int m = 2; //number of dimensions
 double maxr = 12.0;
 double nullcase = 1.0 / (maxr * maxr * maxr);
 
-double energy(const double* x) {
+double energy(const double *x)
+{
 	double fullsum = 0.0;
-	for (int i = 0; i < N - 1; i++) {
-		for (int j = i + 1; j < N; j++) {
+	for (int i = 0; i < N - 1; i++)
+	{
+		for (int j = i + 1; j < N; j++)
+		{
 			double r = 0.0;
-			for (int k = 0; k < m; k++) {
-				r += (x[m*j + k] - x[m*i + k])*(x[m*j + k] - x[m*i + k]);
+			for (int k = 0; k < m; k++)
+			{
+				r += (x[m * j + k] - x[m * i + k]) * (x[m * j + k] - x[m * i + k]);
 			}
-			if (r < 1e-308) {
+			if (r < 1e-308)
+			{
 				fullsum = nullcase * nullcase - 2 * nullcase;
 				return fullsum;
 			}
@@ -30,63 +36,73 @@ double energy(const double* x) {
 	return fullsum;
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	std::chrono::steady_clock sc; //for runtime measurement
-	GridSolverOMP<double> gs;
-	int nodes;
-	double eps;
-	std::cout << "Set number of nodes per dimension" << std::endl << \
-		"It can significantly affect on performance!" << std::endl;
-	std::cin >> nodes;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> nodes;
-	}
-
-	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> eps;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> eps;
-	}
-	gs.setparams(nodes, eps);
+	std::chrono::milliseconds atime_span = std::chrono::duration_values<std::chrono::milliseconds>::zero();
+	PPrOptimizer<double> rOpt;
+	double eps, L;
 	std::ofstream fp;
-	fp.open("paralleltest.txt", std::ios::out);
-	for (int G = 2; G < 5; G++) {
-		N = G;
-		std::cout << "Starting for " << G << " cluster" << std::endl;
-		double *a = new double[m * N];
-		double *b = new double[m * N];
-		double *x = new double[m * N];
-		for (int i = 0; i < m * N; i++) {
-			a[i] = -1.0;
-			b[i] = 1.0;
-		}
-		auto astart = sc.now();
-		double upb = gs.search(m * N, x, a, b, energy);
-		auto aend = sc.now();
-		auto atime_span = std::chrono::duration_cast<std::chrono::milliseconds>(aend - astart);
-		gs.checkErrors();
-		fp << "Found minimum energy: " << upb << std::endl;
-		fp << "at coordinates:" << std::endl;
-		for (int i = 0; i < N; i++) {
-			for (int k = 0; k < m; k++) {
-				fp << x[i * m + k] << "    ";
-			}
-			fp << std::endl;
-		}
-		unsigned long long int fevals;
-		unsigned long int iters;
-		gs.getinfo(fevals, iters);
-		fp << "Consumed evaluations: " << fevals << ", iterations: " << iters << std::endl;
-		fp << "Computing completed in " << atime_span.count() << " millicseconds" << std::endl;
-		delete[]a;
-		delete[]b;
-		delete[]x;
-	}
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::cin.get();
-    return 0;
-}
+	unsigned long long int fevals;
+	unsigned long int iters;
 
+	if (argc < 2)
+	{
+		helper::help(benchlib);
+		return 0;
+	}
+
+	eps = atof(argv[1]);
+	if (eps < std::numeric_limits<double>::min())
+	{
+		std::cerr << "Accuracy defined incorrect, exit" << std::endl;
+		return -1;
+	}
+
+	fp.open("results.txt", std::ios::out);
+
+	int todo = 3, cur = 0;
+	helper::progress_bar(cur, todo);
+	try
+	{
+		for (int G = 2; G < 5; G++)
+		{
+			N = G;
+			double *a = new double[m * N];
+			double *b = new double[m * N];
+			double *x = new double[m * N];
+			for (int i = 0; i < m * N; i++)
+			{
+				a[i] = -1.0;
+				b[i] = 1.0;
+			}
+			rOpt.init(m * N, eps);
+			auto start = sc.now();
+			double upb = rOpt.search(m * N, x, a, b, energy);
+			auto end = sc.now();
+			auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+			atime_span += time_span;
+			
+			fp << "Found minimum energy: " << upb << std::endl;
+			fp << "at coordinates: [";
+			std::copy(x, x + N*m, std::ostream_iterator<double>(fp, ", "));
+			fp << "]" << std::endl;
+			rOpt.getInfo(fevals, iters, L);
+			fp << "With L = " << L << std::endl;
+			fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
+			fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
+			delete[] a;
+			delete[] b;
+			delete[] x;
+		}
+	}
+	catch (std::exception &e)
+	{
+		std::cerr << e.what() << std::endl;
+		fp.close();
+		return -1;
+	}
+	fp << "Total evaluation time: " << atime_span.count() << std::endl;
+	fp.close();
+	return 0;
+}
