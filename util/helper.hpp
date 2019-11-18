@@ -7,9 +7,8 @@
 
 namespace helper{
 
-    static std::string bhelp = "This program should be used with parameter: the number of nodes per dimension set in code, \
-please change it inside\nHere you can set accuracy with which calculation should be runned. \
-Just type foolowing:\n./program_name eps\nWhere eps is float, e.g. 0.01\n\
+    static std::string bhelp = "This program should be used with parameter:\nHere you can set accuracy with which calculation\
+should be runned. Just type foolowing:\n./program_name eps\nWhere eps is float, e.g. 0.01\n\
 Now let's restart program with right parameter";
     static std::string lthelp = "This program should be used with parameter:\n\
 It depends on the benchmark type you want to run. Just type:\n\
