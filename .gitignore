@@ -1,3 +1,5 @@
 *.o
 *.~
 .vscode/
+*.exe
+*.txt
