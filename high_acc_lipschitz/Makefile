@@ -18,6 +18,6 @@ rnd_gen.o: $(GKLSDIR)/rnd_gen.c
 	$(CC) $(CCFLAGS) $(GKLSDIR)/rnd_gen.c
 
 clean:
-	rm -rf *.o hihg_acc_L
+	rm -rf *.o high_acc_L
 
 rebuild: clean high_acc_L
