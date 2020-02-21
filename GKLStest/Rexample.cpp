@@ -5,8 +5,9 @@
 #include <fstream>
 #include <iterator>
 #include <limits>
-#include "../solver/R_Optim_Pure_Parallel.hpp"
-#include "../solver/UltraEstim.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
+#include "solver/UltraEstim.hpp"
+#include "util/helper.hpp"
 
 /* Including GKLS libraries, writen with C language */
 
@@ -45,7 +46,7 @@ but GKLS works only with non-const pointers */
 /* It can be fixed in GKLS code, but tests weren't show any acceleration, it's strange */
 
 
-int main()
+int main(int argc, char **argv)
 {
 	int error_code;    /* error codes variable */
 	int func_num;      /* test function number within a class     */
@@ -78,14 +79,17 @@ int main()
 
 
 	/* Set parametrs of method */
-	/* Interactive */
 
+	if (argc < 2)
+    {
+        helper::help(benchlib);
+        return 0;
+    }
 
-	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> eps;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> eps;
+	eps = atof(argv[1]);
+	if (eps < std::numeric_limits<double>::min()){
+		std::cerr << "Accuracy defined incorrect, exit" << std::endl;
+		return -1;
 	}
 
 
@@ -204,7 +208,7 @@ int main()
 		GKLS_free();
 
 	} /* for func_num */
-	La.unfix();
+	//La.unfix();
 
 	//std::cout << std::endl;
 
@@ -221,8 +225,6 @@ int main()
 
 	/* Deallocate the boundary arrays */
 	delete[]a; delete[]b; delete[]x;
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::cin.get();
 	GKLS_domain_free();
 	return 0;
 

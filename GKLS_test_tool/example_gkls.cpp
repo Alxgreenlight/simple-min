@@ -6,11 +6,12 @@
 #include <iterator>
 #include <limits>
 #include <vector>
-#include "../solver/gridsolver.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
+#include "util/helper.hpp"
 
 extern "C" {
-#include "gkls.h"
-#include "rnd_gen.h"
+#include "GKLStest/gkls.h"
+#include "GKLStest/rnd_gen.h"
 }
 
 
@@ -34,7 +35,7 @@ double func(const double* x) {	/* wrapper for function providing to solver */
 }
 
 
-int main()
+int main(int argc, char **argv)
 {
 	int error_code;    /* error codes variable */
 	int func_num;      /* test function number within a class     */
@@ -53,17 +54,20 @@ int main()
 
 	/* Set accuracy in interactive way */
 	/* Using default the best efficient nodes per dimension = 4 */
-	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> eps;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> eps;
+	if (argc < 2)
+    {
+        helper::help(benchlib);
+        return 0;
+    }
+
+	eps = atof(argv[1]);
+	if (eps < std::numeric_limits<double>::min()){
+		std::cerr << "Accuracy defined incorrect, exit" << std::endl;
+		return -1;
 	}
 
 	/* Create a solver object */
-	//GridSolver<double> gs;
-	GridSolverOMP<double> gs;
-	//GridSolverHLP<double> gs;
+	PPrOptimizer<double> gs;
 	fp << "Parallel search" << std::endl;
 
 
@@ -94,14 +98,12 @@ int main()
 			/* Number of function evaluations and algorithm iteartions during search */
 		unsigned long long int fevs;
 		unsigned long int its;
-		int nod = 4; /* Number of nodes per dimension */
 
 		/* Generate the class of 100 D-type functions */
 			/* provide settings to solver */
-			gs.setparams(nod, eps);
+			gs.init(GKLS_dim, eps);
 			fevs = 0;
 			its = 0;
-			printf("%d\n", nod);
 			summary = 0;
 			allnodes.clear();
 			unsigned long long int time = 0;
@@ -130,16 +132,12 @@ int main()
 				/* Number of function evaluations and algorithm iteartions during search */
 				unsigned long long int fevals;
 				unsigned long int iters;
+				double Lmax;
 
-				gs.getinfo(fevals, iters);
+				gs.getInfo(fevals, iters, Lmax);
 
 				fevs += fevals;
 				its += iters;
-
-
-				/* check if errors during search occured */
-
-				gs.checkErrors();
 
 				/* if answer differ from real global minimum more than eps, the answer is wrong */
 				if ((1.0*fabs(GKLS_global_value - UPB)) > eps) {
@@ -154,7 +152,6 @@ int main()
 			
 			/* Write results to file */
 			fp << "Dim = " << GKLS_dim << ';';
-			fp << nod << ';' << summary << ';';
 			for (int &d : allnodes) {
 				fp << d << ' ';
 			}
@@ -168,16 +165,10 @@ int main()
 
 		/* Close files */
 
-		delete[]a; delete[]b;
+		delete[]a; delete[]b; delete[]x;
 		GKLS_domain_free();
 	}
 	fp.close();
-
-
-	/* Deallocate the boundary vectors */
-
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::cin.get();
 	return 0;
 
 }

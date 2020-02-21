@@ -4,7 +4,8 @@
 #include <iomanip>
 #include <fstream>
 #include <iterator>                          
-#include "../solver/R_Optim_parallel.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
+#include "util/helper.hpp"
 
 extern "C" {
 #include "vagris.h"
@@ -21,7 +22,7 @@ double func(const double *xx) {
 	return random_func(xx[0], xx[1]);	//random_func returns value of function in x1,x2 (from vagris.h)
 }
 
-int main()
+int main(int argc, char **argv)
 {
 	int dim = 2;
 	int nf; //number of test function
@@ -38,11 +39,16 @@ int main()
 		return -1;
 	}
 
-	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> eps;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> eps;
+	if (argc < 2)
+    {
+        helper::help(benchlib);
+        return 0;
+    }
+
+	eps = atof(argv[1]);
+	if (eps < std::numeric_limits<double>::min()){
+		std::cerr << "Accuracy defined incorrect, exit" << std::endl;
+		return -1;
 	}
 
 	/*set left and right bounds of serach regions */
@@ -56,7 +62,7 @@ int main()
 	} //set search area for all tests to [0..1] [0..1] (like in tutorial for this tests)
 
 	try {
-		PrOptimizer_v2<double> opt;
+		PPrOptimizer<double> opt;
 		opt.init(dim, eps);
 		for (nf = 1; nf <= 100; nf++)
 		{
@@ -101,8 +107,6 @@ int main()
 	}
 	fp.close();
 	delete[]a; delete[]b; delete[]x;
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-	std::cin.get();
 	return 0;
 }
 

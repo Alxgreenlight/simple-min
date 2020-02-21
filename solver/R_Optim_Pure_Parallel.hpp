@@ -17,24 +17,22 @@ template <class T>
 class PPrOptimizer : public BlackBoxSolver <T> {
 protected:
 	int dim, np; //dimension and number of threads
-	int all; //number of nodes in mesh
-	T eps; //accuracy
+	int all; //number of nodes in grid
+	T eps; //accuracy required
 	T UpperBound;
 	T maxL; //maximum used value of Lipschitz constant per search
 	unsigned long long FuncEvals; //number of evaluations per search
-	unsigned long Iterations; //number of BnB iterations per search
+	unsigned long Iterations; //number of BranchnBound iterations per search
 	bool initialized; //some parameters must be provided before search
-	const int l = 5, m = 9, h = 17; //number of nodes per dimension in 3 meshes
+	const int l = 5, m = 9, h = 17; //number of nodes per dimension in 3 grids
 	T *grid = nullptr; //array of function values in nodes of mesh
 	T *x = nullptr; //contains coordinates in which function value calculating
 	T *step = nullptr; //step of mesh in every dimension
 	T *ests = nullptr; //for parallel estimations of L calculating
 	int *coords = nullptr; //need for nested iteration
-	/*temporary*/
 		//for time measurement
 		std::chrono::steady_clock sc;
 		std::chrono::microseconds gridtime = us::zero(), esttime = us::zero(), est1 = us::zero(), est2 = us::zero(), est3 = us::zero(), minsearch = us::zero();
-	/*temporary*/
 public:
 	PPrOptimizer() { //throws
 		if (!std::numeric_limits<T>::is_specialized) {

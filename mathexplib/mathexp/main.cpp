@@ -14,8 +14,8 @@
 #include <limits>
 #include <chrono>
 #include <iomanip>
-#include "../testfuncs/benchmarks.hpp"
-#include "../../solver_parallel/solver_omp.h"
+#include "mathexplib/testfuncs/benchmarks.hpp"
+#include "old_solver_files/solver_omp.h"
 
 
 using BM = Benchmark<double>;

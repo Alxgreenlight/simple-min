@@ -4,9 +4,9 @@
 #include <chrono>
 #include <iomanip>
 #include <iterator>
-#include "../testfuncs/benchmarks.hpp"
-//#include "gridsolver_hlp.hpp"
-#include "../../solver/R_Optim_parallel.hpp"
+#include "mathexplib/testfuncs/benchmarks.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
+#include "util/helper.hpp"
 
 
 using BM = Benchmark<double>;
@@ -35,7 +35,7 @@ void findMin(const BM& bm, int nodes, double eps) {
 		a[i] = bm.getBounds()[i].first;
 		b[i] = bm.getBounds()[i].second;
 	}
-	PrOptimizer_v2<double> rOpt;
+	PPrOptimizer<double> rOpt;
 	double UPB, L;
 	try {
 		rOpt.init(dim, eps);
@@ -113,11 +113,16 @@ int main(int argc, char* argv[]) {
 		std::cin >> nodes;
 	}*/
 
-	std::cout << "Set accuracy" << std::endl << "It can significantly affect on performance!" << std::endl;
-	std::cin >> eps;
-	while (std::cin.fail()) {
-		std::cerr << "Please, repeat input" << std::endl;
-		std::cin >> eps;
+	if (argc < 2)
+    {
+        helper::help(benchlib);
+        return 0;
+    }
+
+	eps = atof(argv[1]);
+	if (eps < std::numeric_limits<double>::min()){
+		std::cerr << "Accuracy defined incorrect, exit" << std::endl;
+		return -1;
 	}
 	//adif << "Search with " << nodes << " nodes; eps = " << eps << ';' << std::endl;
 	fp << "Search with " /*<< nodes */ << "fix nodes; eps = " << eps << ';' << std::endl;
