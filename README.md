@@ -8,9 +8,12 @@ The attached makefiles will help to understand the process of building applicati
 All test cases contain comments explaining how the solver can be used.
 
 Necessary files:
-Solver is lovated in solver folder. Currently used version is: R_Optim_Pure_Parallel.hpp
+Solver is located in solver folder. Currently used version is: R_Optim_Pure_Parallel.hpp
 Solver files depende on common/bbsolver.hpp because it support interface
 from https://github.com/mposypkin/blackbox
+
+Serial solver available at solver/R_Optim.hpp
+And parallel one at solver/R_Optim_Pure_Parallel.hpp
 
 Now there are some usable directories:
 solver/
