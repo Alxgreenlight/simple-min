@@ -327,20 +327,27 @@ public:
 	}
 
 protected:
-	T getValue(const unsigned long long j, const int dim, const int nodes, const int nt, const T *a, const std::function<T(const T *const)> &compute)
+	T getValue(const unsigned long long j, const int dim, const int nodes, const int nt, const T *a, T *cStep, const std::function<T(const T *const)> &compute)
 	{
+		T * usedStep;
+		if (cStep != nullptr) {
+			usedStep = cStep;
+		}
+		else {
+			usedStep = this->step;
+		}
 		unsigned long long point = j;
 		for (int k = dim - 1; k >= 0; k--)
 		{
 			unsigned long long t = point % nodes;
 			point = (unsigned long long)(point / nodes);
-			xp[dim * nt + k] = a[k] + t * step[k];
+			xp[dim * nt + k] = a[k] + t * usedStep[k];
 		}
 		T rs = compute((xp + dim * nt));
 		if (rs < Frs[nt])
 		{
 			Frs[nt] = rs;
-			pts[nt] = j;
+			pts[nt] = int(j);
 		}
 		return rs;
 	}
@@ -404,7 +411,7 @@ public:
 				neighbour = j + board / nodes;
 				if ((neighbour < allnodes) && ((j / board) == (neighbour / board)))
 				{
-					loc = static_cast<T>(fabs(getValue(j, dim, nodes, nt, a, compute) - getValue(neighbour, dim, nodes, nt, a, compute))) / step[dim - 1 - k];
+					loc = static_cast<T>(fabs(getValue(j, dim, nodes, nt, a, step, compute) - getValue(neighbour, dim, nodes, nt, a, step, compute))) / step[dim - 1 - k];
 				}
 				if (loc > Ls[nt])
 				{
@@ -564,7 +571,7 @@ public:
 				neighbour = j + board / nodes;
 				if ((neighbour < all) && ((j / board) == (neighbour / board)))
 				{
-					loc = static_cast<T>(fabs(getValue(j, dimension, nodes, nt, a, compute) - getValue(j, dimension, nodes, nt, a, compute))) / step[dimension - 1 - k];
+					loc = static_cast<T>(fabs(getValue(j, dimension, nodes, nt, a, nullptr, compute) - getValue(j, dimension, nodes, nt, a, nullptr, compute))) / step[dimension - 1 - k];
 				}
 				
 				if (loc > Ls[nt])
