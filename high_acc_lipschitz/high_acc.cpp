@@ -1,9 +1,12 @@
 #include <iostream>
+#include <iomanip>
+#include <iterator>
 #include <string>
 #include <chrono>
 #include <fstream>
 #include <exception>
 #include "mathexplib/testfuncs/benchmarks.hpp"
+#include "solver/R_Optim_Pure_Parallel.hpp"
 #include "solver/UltraEstim.hpp"
 #include "util/helper.hpp"
 extern "C"
@@ -13,13 +16,14 @@ extern "C"
 }
 
 #define NUMNOD 1000000
+const double eps = 1e-4;
 
 void doGKLS(int dim, int nod);
 void doMatx(int nod);
 
 double *a = nullptr, *b = nullptr, *x = nullptr;
+double UPB, Lmax;
 std::chrono::steady_clock sc;
-std::chrono::milliseconds atime_span = std::chrono::duration_values<std::chrono::milliseconds>::zero();
 std::ofstream fp;
 using BM = Benchmark<double>;
 BM *ptr;
@@ -90,7 +94,7 @@ double mFunc(const double *x)
     return v;
 }
 
-void findMin(const BM &bm)
+void findMin(const BM &bm, int nod)
 {
     int dim = bm.getDim();
     delete[] a;
@@ -107,16 +111,36 @@ void findMin(const BM &bm)
         a[i] = bm.getBounds()[i].first;
         b[i] = bm.getBounds()[i].second;
     }
-    double UPB;
+    PPrOptimizer<double> rOpt;
     try
     {
         L_accurate<double> La;
+        La.use_memory(false);
         fp << bm << std::endl;
         auto start = sc.now();
-        fp << "Real accurate estimated L: " << La.ultraoptimizer_m(dim, NUMNOD, a, b, x, UPB, mFunc) << std::endl;
+        fp << "Real accurate estimated L: " << La.ultraoptimizer_m_light(dim, nod, a, b, x, UPB, mFunc) << std::endl;
         auto end = sc.now();
         auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
         fp << "Evaluation time: " << time_span.count() << " ms" << std::endl;
+        rOpt.init(dim, eps);
+        start = sc.now();
+        UPB = rOpt.search(dim, x, a, b, mFunc);
+        end = sc.now();
+
+        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+        unsigned long long int fevals;
+        unsigned long int iters;
+        rOpt.getInfo(fevals, iters, Lmax);
+        fp << "Simple-min search complete:" << std::endl
+           << "Upper bound: " << std::setprecision(4) << UPB << std::endl
+           << "At [";
+        std::copy(x, x + dim, std::ostream_iterator<double>(fp, " "));
+        fp << "]" << std::endl
+           << "Real global minimum: " << std::setprecision(4) << bm.getGlobMinY() << std::endl
+           << std::endl;
+        fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
+        fp << "With maximum L = " << Lmax << std::endl;
+        fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
         fp << std::endl
            << std::endl;
     }
@@ -173,6 +197,7 @@ void doGKLS(int dim, int nod)
         x = new double[GKLS_dim];
 
         L_accurate<double> La;
+        La.use_memory(false);
         La.stay_fixed(GKLS_dim, nod);
 
         helper::progress_bar(0, 100);
@@ -192,11 +217,31 @@ void doGKLS(int dim, int nod)
 
             fp << "D-type function number " << func_num << std::endl;
             auto start = sc.now();
-            fp << "Real accurate estimated L: " << La.ultraoptimizer_f(a, b, x, UPB, gFunc) << std::endl;
+            fp << "Real accurate estimated L: " << La.ultraoptimizer_f_light(a, b, x, UPB, gFunc) << std::endl;
             auto end = sc.now();
             helper::progress_bar(func_num, 100);
             auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
             fp << "Evaluation time: " << time_span.count() << " ms" << std::endl;
+            PPrOptimizer<double> rOpt;
+            rOpt.init(dim, eps);
+            start = sc.now();
+            UPB = rOpt.search(dim, x, a, b, gFunc);
+            end = sc.now();
+
+            time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+            unsigned long long int fevals;
+            unsigned long int iters;
+            rOpt.getInfo(fevals, iters, Lmax);
+            fp << "Search complete:" << std::endl
+               << "Upper bound: " << std::setprecision(4) << UPB << std::endl
+               << "At [";
+            std::copy(x, x + dim, std::ostream_iterator<double>(fp, " "));
+            fp << "]" << std::endl
+               << "Real global minimum: " << std::setprecision(4) << GKLS_global_value << std::endl
+               << std::endl;
+            fp << "Function evaluations: " << fevals << " in " << iters << " iterations" << std::endl;
+            fp << "With L = " << Lmax << std::endl;
+            fp << "Evaluation time: " << time_span.count() << "ms" << std::endl;
             fp << std::endl
                << std::endl;
             GKLS_free();
@@ -224,7 +269,7 @@ void doGKLS(int dim, int nod)
 void doMatx(int nod)
 {
     std::cout << "Matexplib functions with nodes per dimension: " << nod << std::endl;
-    int all = 14, cur = 0;
+    int all = 1, cur = 0;
     fp.open("results_ml.txt", std::ios::out);
     if (!fp.is_open())
     {
@@ -233,89 +278,89 @@ void doMatx(int nod)
     helper::progress_bar(0, all);
     try
     {
-        Ackley1Benchmark<double> ack1(3);
-        ptr = &ack1;
-        findMin(ack1);
-        cur++;
-        helper::progress_bar(cur, all);
+        // Ackley1Benchmark<double> ack1(3);
+        // ptr = &ack1;
+        // findMin(ack1);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        SphereBenchmark<double> sf(3);
-        ptr = &sf;
-        findMin(sf);
-        cur++;
-        helper::progress_bar(cur, all);
+        // SphereBenchmark<double> sf(3);
+        // ptr = &sf;
+        // findMin(sf);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
         RosenbrockBenchmark<double> rsb(3);
         ptr = &rsb;
-        findMin(rsb);
+        findMin(rsb, nod);
         cur++;
         helper::progress_bar(cur, all);
 
-        BealeBenchmark<double> Bel;
-        ptr = &Bel;
-        findMin(Bel);
-        cur++;
-        helper::progress_bar(cur, all);
+        // BealeBenchmark<double> Bel;
+        // ptr = &Bel;
+        // findMin(Bel);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        GoldsteinPriceBenchmark<double> Gdp;
-        ptr = &Gdp;
-        findMin(Gdp);
-        cur++;
-        helper::progress_bar(cur, all);
+        // GoldsteinPriceBenchmark<double> Gdp;
+        // ptr = &Gdp;
+        // findMin(Gdp);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        BoothBenchmark<double> Bth;
-        ptr = &Bth;
-        findMin(Bth);
-        cur++;
-        helper::progress_bar(cur, all);
+        // BoothBenchmark<double> Bth;
+        // ptr = &Bth;
+        // findMin(Bth);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        Bukin6Benchmark<double> Bk6;
-        ptr = &Bk6;
-        findMin(Bk6);
-        cur++;
-        helper::progress_bar(cur, all);
+        // Bukin6Benchmark<double> Bk6;
+        // ptr = &Bk6;
+        // findMin(Bk6);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        MatyasBenchmark<double> Mat;
-        ptr = &Mat;
-        findMin(Mat);
-        cur++;
-        helper::progress_bar(cur, all);
+        // MatyasBenchmark<double> Mat;
+        // ptr = &Mat;
+        // findMin(Mat);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        HimmelblauBenchmark<double> Hmb;
-        ptr = &Hmb;
-        findMin(Hmb);
-        cur++;
-        helper::progress_bar(cur, all);
+        // HimmelblauBenchmark<double> Hmb;
+        // ptr = &Hmb;
+        // findMin(Hmb);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        CamelThreeHumpBenchmark<double> Cm3;
-        ptr = &Cm3;
-        findMin(Cm3);
-        cur++;
-        helper::progress_bar(cur, all);
+        // CamelThreeHumpBenchmark<double> Cm3;
+        // ptr = &Cm3;
+        // findMin(Cm3);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        EggHolderBenchmark<double> egg;
-        ptr = &egg;
-        findMin(egg);
-        cur++;
-        helper::progress_bar(cur, all);
+        // EggHolderBenchmark<double> egg;
+        // ptr = &egg;
+        // findMin(egg);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        Table2HolderTable2Benchmark<double> Tb2;
-        ptr = &Tb2;
-        findMin(Tb2);
-        cur++;
-        helper::progress_bar(cur, all);
+        // Table2HolderTable2Benchmark<double> Tb2;
+        // ptr = &Tb2;
+        // findMin(Tb2);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        McCormickBenchmark<double> Mcc;
-        ptr = &Mcc;
-        findMin(Mcc);
-        cur++;
-        helper::progress_bar(cur, all);
+        // McCormickBenchmark<double> Mcc;
+        // ptr = &Mcc;
+        // findMin(Mcc);
+        // cur++;
+        // helper::progress_bar(cur, all);
 
-        StyblinskiTangBenchmark<double> Stb;
-        ptr = &Stb;
-        findMin(Stb);
-        cur++;
-        helper::progress_bar(cur, all);
+        // StyblinskiTangBenchmark<double> Stb;
+        // ptr = &Stb;
+        // findMin(Stb);
+        // cur++;
+        // helper::progress_bar(cur, all);
     }
     catch (std::exception &e)
     {

@@ -6,7 +6,7 @@ INCDIR=-I../
 GKLSDIR=../GKLStest
 
 high_acc_L: high_acc.o gkls.o rnd_gen.o
-	$(CXX) -o high_acc_L high_acc.o gkls.o rnd_gen.o -fopenmp
+	$(CXX) -o high_acc_L.exe high_acc.o gkls.o rnd_gen.o -fopenmp
 
 high_acc.o: high_acc.cpp
 	$(CXX) $(CXXFLAGS) $(INCDIR) high_acc.cpp
